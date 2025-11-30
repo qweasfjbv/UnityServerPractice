@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include <vector>
 #include <WinSock2.h>
 #include <Windows.h>
-#include <vector>
-
-class IOCPCore;
 
 namespace LobbyServer {
+
+	class IOCPCore;
 
 	class Server
 	{
@@ -34,10 +34,6 @@ namespace LobbyServer {
 
 	private:
 		SOCKET m_listenSocket;
-		HANDLE m_iocpHandle;
-		bool m_isRunning;
-
-		IOCPCore* m_iocpCore;
-		std::vector<HANDLE> m_workerThreads;
+		LobbyServer::IOCPCore* m_iocpCore;
 	};
 }

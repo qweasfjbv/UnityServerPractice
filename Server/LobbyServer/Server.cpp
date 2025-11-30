@@ -7,8 +7,6 @@ namespace LobbyServer {
 
 	Server::Server() :
 		m_listenSocket(INVALID_SOCKET),
-		m_iocpHandle(NULL),
-		m_isRunning(false),
 		m_iocpCore(nullptr) { }
 
 	Server::~Server()
@@ -20,7 +18,9 @@ namespace LobbyServer {
 	{
 		if (!InitWinsock()) return false;
 		if (!InitListenSocket(port)) return false;
-		if (!InitIOCP()) return false;
+
+		m_iocpCore = new IOCPCore();
+		if (!m_iocpCore->InitIOCP()) return false;
 
 		LOG_INFO("Server Init Success!");
 		return true;
@@ -30,7 +30,7 @@ namespace LobbyServer {
 	{
 		WSADATA wsaData;
 		int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (res != 0) LOG_ERROR("Winsock Startup Failed!"); 
+		if (res != 0) LOG_ERROR("Winsock Startup Failed!");
 		return res == 0;
 	}
 
@@ -44,13 +44,13 @@ namespace LobbyServer {
 		addr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 		addr.sin_port = htons(port);
 
-		if (bind(m_listenSocket, (SOCKADDR*)&addr, sizeof(addr)) == SOCKET_ERROR) 
+		if (bind(m_listenSocket, (SOCKADDR*)&addr, sizeof(addr)) == SOCKET_ERROR)
 		{
 			LOG_ERROR("Listen Socket Bind Failed!");
 			return false;
 		}
 
-		if (listen(m_listenSocket, SOMAXCONN) == SOCKET_ERROR) 
+		if (listen(m_listenSocket, SOMAXCONN) == SOCKET_ERROR)
 		{
 			LOG_ERROR("Listen Socket Listen Failed!");
 			return false;
@@ -60,85 +60,37 @@ namespace LobbyServer {
 		return true;
 	}
 
-	bool Server::InitIOCP()
-	{
-		m_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-		if (m_iocpHandle == NULL) 
-		{
-			LOG_ERROR("CreateIOCP failed!");
-			return false;
-		}
-
-		m_iocpCore = new IOCPCore(m_iocpHandle);
-
-		SYSTEM_INFO sysInfo;
-		GetSystemInfo(&sysInfo);
-		int threadCount = sysInfo.dwNumberOfProcessors * 2;
-		
-		for (int i = 0; i < threadCount; i++) 
-		{
-			HANDLE hThread = CreateThread(nullptr, 0, [](LPVOID param) -> DWORD {
-				reinterpret_cast<Server*>(param)->WorkerLoop();
-				return 0; }
-			, this, 0, nullptr);
-			m_workerThreads.push_back(hThread);
-		}
-
-		return true;
-	}
-
 	void Server::Run()
 	{
-		m_isRunning = true;
-
+		m_iocpCore->Run();
 		LOG_INFO("Server Running ...");
 
-		while (m_isRunning) 
+		while (m_iocpCore->IsRunning())
 		{
-			// HACK - AcceptEx Needed
-			Sleep(100);
+			// HACK - Upgrade to AcceptEx
+			SOCKET clientSock = accept(m_listenSocket, NULL, NULL);
+			if (clientSock == INVALID_SOCKET) continue;
+
+			ClientSession* session = new ClientSession(clientSock);
+
+			m_iocpCore->RegisterSession(session);
+			session->PostRecv();
 		}
 	}
 
 	void Server::Stop()
 	{
-		if (!m_isRunning) return;
-		m_isRunning = false;
+		if (!m_iocpCore->IsRunning()) return;
+		m_iocpCore->Stop();
 
-		if (m_listenSocket != INVALID_SOCKET) 
+		if (m_listenSocket != INVALID_SOCKET)
 		{
 			closesocket(m_listenSocket);
 			m_listenSocket = INVALID_SOCKET;
 		}
 
-		if (m_iocpHandle) 
-		{
-			CloseHandle(m_iocpHandle);
-			m_iocpHandle = NULL;
-		}
-
+		delete m_iocpCore;
 		WSACleanup();
-	}
-
-
-	void Server::WorkerLoop()
-	{
-		DWORD bytes;
-		ULONG_PTR key;
-		OVERLAPPED* overlapped = nullptr;
-
-		while (m_isRunning) 
-		{
-			BOOL ok = GetQueuedCompletionStatus(
-				m_iocpHandle,
-				&bytes,
-				&key,
-				&overlapped,
-				INFINITE
-			);
-
-			m_iocpCore->HandleCompletion(ok, bytes, key, overlapped);
-		}
 	}
 
 }

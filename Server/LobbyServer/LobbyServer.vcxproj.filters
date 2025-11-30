@@ -56,5 +56,8 @@
     <ClInclude Include="Logger.h">
       <Filter>헤더 파일\Common</Filter>
     </ClInclude>
+    <ClInclude Include="OverlappedEx.h">
+      <Filter>헤더 파일\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

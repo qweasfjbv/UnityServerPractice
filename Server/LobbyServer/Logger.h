@@ -4,11 +4,10 @@
 #include <string>
 #include <functional>
 #include <filesystem>
-#include <windows.h>
 
-#define LOG_INFO(msg)		Logger::Log(msg, LogLevel::Info, __FILE__, __LINE__, __FUNCTION__)
-#define LOG_WARNING(msg)	Logger::Log(msg, LogLevel::Warning, __FILE__, __LINE__, __FUNCTION__)
-#define LOG_ERROR(msg)		Logger::Log(msg, LogLevel::Error, __FILE__, __LINE__, __FUNCTION__)
+#define LOG_INFO(msg)		LobbyServer::Logger::Log(msg, LogLevel::Info, __FILE__, __LINE__, __FUNCTION__)
+#define LOG_WARNING(msg)	LobbyServer::Logger::Log(msg, LogLevel::Warning, __FILE__, __LINE__, __FUNCTION__)
+#define LOG_ERROR(msg)		LobbyServer::Logger::Log(msg, LogLevel::Error, __FILE__, __LINE__, __FUNCTION__)
 
 namespace LobbyServer {
 
