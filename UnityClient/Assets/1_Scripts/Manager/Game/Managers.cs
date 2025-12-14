@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Practice.Manager.Game
 {
+	[DefaultExecutionOrder(-100)]
 	public class Managers : MonoBehaviour
 	{
 		private static Managers instance;

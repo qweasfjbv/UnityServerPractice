@@ -18,6 +18,17 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ClientInfo.h" />
+    <ClInclude Include="Define.h" />
+    <ClInclude Include="EchoServer.h" />
+    <ClInclude Include="IOCPServer.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="Packet.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -112,7 +123,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Mswsock.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,23 +142,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="ClientSession.cpp" />
-    <ClCompile Include="IOCPCore.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="PacketHandler.cpp" />
-    <ClCompile Include="Server.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ClientSession.h" />
-    <ClInclude Include="IOCPCore.h" />
-    <ClInclude Include="Logger.h" />
-    <ClInclude Include="OverlappedEx.h" />
-    <ClInclude Include="PacketDefine.h" />
-    <ClInclude Include="PacketHandler.h" />
-    <ClInclude Include="PacketStructs.h" />
-    <ClInclude Include="Server.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

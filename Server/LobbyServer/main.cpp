@@ -1,21 +1,22 @@
-#include "Server.h"
-#include "Logger.h"
+#include "EchoServer.h"
 
-using namespace LobbyServer;
+const UINT16 SERVER_PORT = 61394;
+const UINT16 MAX_CLIENT = 100;
 
-#define LOBBY_PORT 61394
+int main() {
 
-int main()
-{
-	Server server;
+	EchoServer server;
 
-	if (!server.Init(LOBBY_PORT))
-	{
-		LOG_ERROR("Server Init Failed!");
-		return -1;
-	}
+	server.InitSocket();
 
-	server.Run();
+	server.BindandListen(SERVER_PORT);
+
+	server.Run(MAX_CLIENT);
+
+	LOG_INFO("WAIT FOR ANY KEY....");
+	getchar();
+
+	server.End();
 
 	return 0;
 }

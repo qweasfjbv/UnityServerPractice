@@ -16,8 +16,12 @@ namespace Practice.UI
 		{
 			loginButton.onClick.AddListener(() =>
 			{
-				ServerManagers.Auth.SendLoginRequest(usernameIF.text, passwordIF.text, () => Managers.Scene.ChangeScene("LobbyScene"));
+				ServerManagers.Auth.SendLoginRequest(usernameIF.text, passwordIF.text, () => {
+					Managers.Scene.ChangeScene("LobbyScene");
+					ServerManagers.Lobby.ConnectLobbyServer();
+					});
 			});
 		}
+
 	}
 }

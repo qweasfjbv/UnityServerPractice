@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Practice.Manager.Server
 {
+	[DefaultExecutionOrder(-100)]
 	public class ServerManagers : MonoBehaviour
 	{
 		private static ServerManagers instance;

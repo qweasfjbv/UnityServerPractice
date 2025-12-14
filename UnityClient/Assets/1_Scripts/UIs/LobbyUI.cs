@@ -16,6 +16,14 @@ namespace Practice.UI
 			});
 		}
 
-		
+		int count = 0;
+		private void Update()
+		{
+			if (Input.GetKeyDown(KeyCode.Space))
+			{
+				ServerManagers.Lobby.SendString("HELLO" + count++);
+			}
+		}
+
 	}
 }
