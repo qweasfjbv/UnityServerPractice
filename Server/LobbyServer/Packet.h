@@ -60,16 +60,16 @@ struct PKT_PartyJoinAck {};
 
 struct PKT_PartyUpdate
 {
-	uint8_t partyId;
-	uint8_t memberCount;
-	PartyMemberInfo members[4];
+	uint8_t m_partyId;
+	uint8_t m_memberCount;
+	PartyMemberInfo m_members[4];
 };
 
 // Inviter -> Server
 struct PKT_PartyInvite
 {
-	uint8_t partyId;
-	uint8_t targetAccountId;
+	uint8_t m_partyId;
+	uint8_t m_targetAccountId;
 };
 
 // Server -> Inviter
@@ -91,7 +91,7 @@ struct PKT_PartyInviteAnswerReq
 // Server -> Inviter, Invitee (ACK)
 struct PKT_PartyInviteAnswer
 {
-	uint8_t result; // 2 = Timeout, 1 = accept, 0 = reject
+	uint8_t m_result; // 2 = Timeout, 1 = accept, 0 = reject
 };
 
 struct PKT_MatchMakeReq

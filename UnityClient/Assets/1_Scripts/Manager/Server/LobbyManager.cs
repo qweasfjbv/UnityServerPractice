@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace Practice.Manager.Server
@@ -56,7 +55,7 @@ namespace Practice.Manager.Server
 			}
 		}
 
-		async Task SendLoop()
+		private async Task SendLoop()
 		{
 			isSending = true;
 
