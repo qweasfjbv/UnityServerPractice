@@ -12,6 +12,6 @@ namespace Practice.Weapons
     /// </summary>
     public class GunBase : MonoBehaviour
     {
-        [SerializeField]
+
     }
 }

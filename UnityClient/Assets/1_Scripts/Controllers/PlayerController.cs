@@ -7,6 +7,9 @@ namespace Practice.Controller
     [RequireComponent(typeof(CapsuleCollider))]
     public class PlayerController : MonoBehaviour
     {
+		[Header("----------Bindings----------")]
+		[SerializeField] private Transform targetCamera;
+
         private Animator animator;
         private Rigidbody rigidbody;
         private CapsuleCollider collider;
@@ -21,6 +24,11 @@ namespace Practice.Controller
 		private void Update()
 		{
 			
+		}
+
+		private void InitCamera()
+		{
+
 		}
 
 		private void Move()
