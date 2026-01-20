@@ -28,8 +28,10 @@ namespace Practice.Manager.Server
 
 		private static AuthManager auth = new AuthManager();
 		private static LobbyManager lobby = new LobbyManager();
+		private static HeadlessManager headless = new HeadlessManager();
 
 		public static AuthManager Auth => auth;
 		public static LobbyManager Lobby => lobby;
+		public static HeadlessManager Headless => headless;
 	}
 }
