@@ -24,14 +24,31 @@ namespace Practice.Manager.Server
 			{
 				Destroy(this.gameObject);
 			}
+
+			dedi.Init();
+		}
+
+		private void Update()
+		{
+			dedi.OnUpdate();
+		}
+
+		private void OnDestroy()
+		{
+			dedi.Shutdown();
 		}
 
 		private static AuthManager auth = new AuthManager();
 		private static LobbyManager lobby = new LobbyManager();
-		private static HeadlessManager headless = new HeadlessManager();
+
+#if UNITY_SERVER
+		private static UDPNetworkTransport dedi = new DediServerManager();
+#else
+		private static UDPNetworkTransport dedi = new DediClientManager();
+#endif
 
 		public static AuthManager Auth => auth;
 		public static LobbyManager Lobby => lobby;
-		public static HeadlessManager Headless => headless;
+		public static UDPNetworkTransport Dedi => dedi;
 	}
 }

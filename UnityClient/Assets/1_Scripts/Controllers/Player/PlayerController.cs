@@ -8,7 +8,7 @@ namespace Practice.Controller
 	/// Player Input Info for Client Side Prediction
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	struct PlayerInput
+	public struct PlayerInput
 	{
 		public int tick;
 		public Vector2 move;
@@ -21,7 +21,7 @@ namespace Practice.Controller
 	/// Player State Info for Synchronization
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	struct PlayerState
+	public struct PlayerState
 	{
 		public int tick;
 		public Vector3 position;
@@ -60,7 +60,7 @@ namespace Practice.Controller
 
 		private void Update()
 		{
-			
+
 		}
 
 		private void FixedUpdate()

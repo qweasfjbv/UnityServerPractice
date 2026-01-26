@@ -16,6 +16,19 @@ namespace Practice.Utils
 
 			return buffer;
 		}
+		public static byte[] Serizlize<T>(PacketType type, T data) where T : unmanaged
+		{
+			int size = sizeof(T);
+			byte[] buffer = new byte[size + 1];
+
+			buffer[0] = (byte)type;
+			fixed (byte* ptr = buffer)
+			{
+				UnsafeUtility.MemCpy(ptr + 1, &data, size);
+			}
+
+			return buffer;
+		}
 
 		public static T Deserialize<T>(byte[] buffer) where T : unmanaged
 		{
@@ -23,6 +36,17 @@ namespace Practice.Utils
 			fixed (byte* ptr = buffer)
 			{
 				UnsafeUtility.MemCpy(&data, ptr, sizeof(T));
+			}
+			return data;
+		}
+		public static T Deserialize<T>(out PacketType type, byte[] buffer) where T : unmanaged
+		{
+			type = (PacketType)buffer[0];
+
+			T data;
+			fixed (byte* ptr = buffer)
+			{
+				UnsafeUtility.MemCpy(&data, ptr + 1, sizeof(T));
 			}
 			return data;
 		}

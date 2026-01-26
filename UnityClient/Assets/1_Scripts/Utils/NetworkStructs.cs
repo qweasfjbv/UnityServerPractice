@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Net;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace Practice.Utils
@@ -41,5 +42,12 @@ namespace Practice.Utils
 			x = v.X,
 			y = v.Y
 		};
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct UdpPacket
+	{
+		public byte[] data;
+		public IPEndPoint sender;
 	}
 }
