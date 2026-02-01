@@ -1,5 +1,6 @@
 ﻿using Practice.Utils;
 using System.Net;
+using UnityEngine;
 
 namespace Practice.Manager.Server
 {
@@ -18,11 +19,25 @@ namespace Practice.Manager.Server
 
 		public override void Init()
 		{
+			base.Init();
+			Debug.Log("DediClient Init");
+			// TODO - PORT will be changed by GameServerManager
 			serverEP = new IPEndPoint(IPAddress.Parse(Constants.IP_ADDR), Constants.PORT_DEDI);
+		}
+
+		public override void OnUpdate()
+		{
+			base.OnUpdate();
+
+			if (Input.GetKeyDown(KeyCode.Alpha1))
+			{
+				Send(serverEP, Serializer.Serialize<int>(PacketType.S2C_Ping, 1));
+			}
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
+			Debug.Log("Client Get Packet : ");
 			PacketType type = (PacketType)packet.data[0];
 			switch (type)
 			{

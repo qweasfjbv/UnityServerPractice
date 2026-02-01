@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Practice.Manager.Server
@@ -11,6 +12,10 @@ namespace Practice.Manager.Server
 		void Awake()
 		{
 			Init();
+
+#if !UNITY_EDITOR && UNITY_SERVER
+			Application.logMessageReceived += OnLog;
+#endif
 		}
 
 		private void Init()
@@ -36,12 +41,16 @@ namespace Practice.Manager.Server
 		private void OnDestroy()
 		{
 			dedi.Shutdown();
+
+#if !UNITY_EDITOR && UNITY_SERVER
+			Application.logMessageReceived -= OnLog;
+#endif
 		}
 
 		private static AuthManager auth = new AuthManager();
 		private static LobbyManager lobby = new LobbyManager();
 
-#if UNITY_SERVER
+#if !UNITY_EDITOR && UNITY_SERVER
 		private static UDPNetworkTransport dedi = new DediServerManager();
 #else
 		private static UDPNetworkTransport dedi = new DediClientManager();
@@ -50,5 +59,13 @@ namespace Practice.Manager.Server
 		public static AuthManager Auth => auth;
 		public static LobbyManager Lobby => lobby;
 		public static UDPNetworkTransport Dedi => dedi;
+
+		#region Utils
+		private void OnLog(string msg, string stackTrace, LogType type)
+		{
+			Console.Out.WriteLine(msg);
+			Console.Out.Flush();
+		}
+		#endregion
 	}
 }

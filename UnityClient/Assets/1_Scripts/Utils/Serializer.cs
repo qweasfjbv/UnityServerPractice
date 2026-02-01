@@ -16,7 +16,7 @@ namespace Practice.Utils
 
 			return buffer;
 		}
-		public static byte[] Serizlize<T>(PacketType type, T data) where T : unmanaged
+		public static byte[] Serialize<T>(PacketType type, T data) where T : unmanaged
 		{
 			int size = sizeof(T);
 			byte[] buffer = new byte[size + 1];

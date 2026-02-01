@@ -2,6 +2,7 @@
 using Practice.Utils;
 using System.Collections.Generic;
 using System.Net;
+using UnityEngine;
 
 namespace Practice.Manager.Server
 {
@@ -37,8 +38,15 @@ namespace Practice.Manager.Server
 	{
 		private Dictionary<IPEndPoint, ClientConnection> clients = new();
 
+		public override void Init()
+		{
+			base.Init();
+			Debug.Log("DediServer Init");
+		}
+
 		protected override void HandlePacket(in UdpPacket packet)
 		{
+			Debug.Log("Handle Packet");
 			if (!clients.TryGetValue(packet.sender, out var client))
 			{
 				client = new ClientConnection
@@ -50,6 +58,8 @@ namespace Practice.Manager.Server
 			}
 
 			PacketType type = (PacketType)packet.data[0];
+			Debug.Log("Server Get Packet : " + type.ToString());
+
 			switch (type)
 			{
 				case PacketType.C2S_Pong:

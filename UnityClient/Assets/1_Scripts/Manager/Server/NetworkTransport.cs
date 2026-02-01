@@ -34,7 +34,7 @@ namespace Practice.Manager.Server
 			isRunning = true;
 			recvThread.Start();
 		}
-		public virtual void OnUpdate() 
+		public virtual void OnUpdate()
 		{
 			// Process packet on main thread
 			while (recvQueue.TryDequeue(out UdpPacket packet))

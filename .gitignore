@@ -114,3 +114,7 @@ InitTestScene*.unity*
 /Server/Authentication/**/dist/
 /Server/Authentication/**/npm-debug.log
 /Server/Authentication/**/yarn-error.log
+
+# Server - Builds
+/Server/DediServer/**
+/UnityClient/Builds/**
