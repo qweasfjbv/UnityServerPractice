@@ -1,6 +1,10 @@
 using System;
 using UnityEngine;
 
+#if !UNITY_EDITOR && UNITY_SERVER
+using System.IO;
+#endif
+
 namespace Practice.Manager.Server
 {
 	[DefaultExecutionOrder(-100)]
@@ -14,6 +18,12 @@ namespace Practice.Manager.Server
 			Init();
 
 #if !UNITY_EDITOR && UNITY_SERVER
+			var sw = new StreamWriter(Console.OpenStandardOutput());
+			sw.AutoFlush = true;
+			Console.SetOut(sw);
+
+			Debug.unityLogger.logEnabled = true;
+			Application.runInBackground = true;
 			Application.logMessageReceived += OnLog;
 #endif
 		}
@@ -63,7 +73,6 @@ namespace Practice.Manager.Server
 		#region Utils
 		private void OnLog(string msg, string stackTrace, LogType type)
 		{
-			Console.Out.WriteLine(msg);
 			Console.Out.Flush();
 		}
 		#endregion

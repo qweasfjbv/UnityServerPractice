@@ -39,6 +39,7 @@ namespace Practice.Manager.Server
 			// Process packet on main thread
 			while (recvQueue.TryDequeue(out UdpPacket packet))
 			{
+				Debug.Log("Handle Packet!");
 				HandlePacket(packet);
 			}
 		}

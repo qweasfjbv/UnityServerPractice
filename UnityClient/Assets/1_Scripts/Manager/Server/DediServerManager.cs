@@ -1,6 +1,6 @@
 ﻿using Practice.Controller;
 using Practice.Utils;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using UnityEngine;
 
@@ -36,17 +36,22 @@ namespace Practice.Manager.Server
 	/// </summary>
 	public class DediServerManager : UDPNetworkTransport
 	{
-		private Dictionary<IPEndPoint, ClientConnection> clients = new();
+		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
 		public override void Init()
 		{
 			base.Init();
+
 			Debug.Log("DediServer Init");
+		}
+
+		public override void OnUpdate()
+		{
+			base.OnUpdate();
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			Debug.Log("Handle Packet");
 			if (!clients.TryGetValue(packet.sender, out var client))
 			{
 				client = new ClientConnection
@@ -54,15 +59,17 @@ namespace Practice.Manager.Server
 					endPoint = packet.sender,
 					isConnected = true
 				};
-				clients.Add(packet.sender, client);
+				clients.TryAdd(packet.sender, client);
 			}
 
 			PacketType type = (PacketType)packet.data[0];
-			Debug.Log("Server Get Packet : " + type.ToString());
+			Debug.Log(packet.sender.ToString() + " : " + type.ToString());
 
 			switch (type)
 			{
-				case PacketType.C2S_Pong:
+				case PacketType.C2S_Ping:
+					Debug.Log("PING : " + Serializer.Deserialize<long>(out _, packet.data));
+					Send(packet.sender, packet.data);
 					break;
 				case PacketType.C2S_Input:
 					break;
