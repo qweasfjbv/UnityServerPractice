@@ -1,3 +1,5 @@
+using Practice.Manager.Server;
+using Practice.Utils;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -77,7 +79,7 @@ namespace Practice.Controller
 			curState = Simulate(curState, input, Time.fixedDeltaTime);
 			stateBuffer[index] = curState;
 
-			// SendToServer(input);
+			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
 		}
 
 		/** Common Logic **/

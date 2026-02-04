@@ -48,16 +48,21 @@ namespace Practice.Manager.Server
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			Debug.Log("Client Get Packet : ");
 			PacketType type = (PacketType)packet.data[0];
 			switch (type)
 			{
-				case PacketType.C2S_Ping:
+				case PacketType.S2C_Pong:
 					Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
 					break;
 				case PacketType.S2C_Snapshot:
 					break;
 			}
+		}
+
+		public override void Send(IPEndPoint destEP, byte[] payload)
+		{
+			if (destEP == null) destEP = serverEP;
+			base.Send(destEP, payload);
 		}
 	}
 }

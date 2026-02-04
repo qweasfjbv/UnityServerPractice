@@ -11,8 +11,8 @@ namespace Practice.Manager.Server
 		public IPEndPoint endPoint;
 
 		// Network
-		public int lastRecvTick;
-		public float lastRecvTime;
+		public long lastRecvTick;
+		public long lastRecvTime;
 
 		// Client Side Preidction
 		public int lastProcessedInputTick;
@@ -52,7 +52,9 @@ namespace Practice.Manager.Server
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			if (!clients.TryGetValue(packet.sender, out var client))
+			// TODO - Add all player when game starts
+			ClientConnection client;
+			if (!clients.TryGetValue(packet.sender, out client))
 			{
 				client = new ClientConnection
 				{
@@ -68,10 +70,19 @@ namespace Practice.Manager.Server
 			switch (type)
 			{
 				case PacketType.C2S_Ping:
-					Debug.Log("PING : " + Serializer.Deserialize<long>(out _, packet.data));
-					Send(packet.sender, packet.data);
+					{
+						// Response Ping-Pong
+						long clientTime = Serializer.Deserialize<long>(out _, packet.data);
+						Send(packet.sender, Serializer.Serialize<long>(PacketType.S2C_Pong, clientTime));
+
+						client.lastRecvTime = NetworkTimer.NowMs();
+						client.lastRecvTick = NetworkTimer.NowTicks();
+					}
 					break;
 				case PacketType.C2S_Input:
+					{
+
+					}
 					break;
 			}
 		}

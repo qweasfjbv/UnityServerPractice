@@ -49,6 +49,10 @@ namespace Practice.Manager.Server
 			recvThread?.Abort();
 			udp?.Close();
 		}
+		public virtual void Send(IPEndPoint destEP, byte[] payload)
+		{
+			udp.Send(payload, payload.Length, destEP);
+		}
 
 		protected abstract void HandlePacket(in UdpPacket packet);
 
@@ -70,10 +74,6 @@ namespace Practice.Manager.Server
 			{
 				Debug.Log($"UDP Receive stopped : {e}");
 			}
-		}
-		protected void Send(IPEndPoint destEP, byte[] payload)
-		{
-			udp.Send(payload, payload.Length, destEP);
 		}
 	}
 }
