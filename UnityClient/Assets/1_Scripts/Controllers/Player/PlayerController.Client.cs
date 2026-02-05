@@ -9,5 +9,12 @@ namespace Practice.Controller
 
 		}
 
+		private void OnGetSnapshot(PlayerState state)
+		{
+			// TODO
+			// - Check tick
+			// - Re-simulate to current tick
+			// - Reconciliation
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Practice.Controller;
 using Practice.Utils;
+using System;
 using System.Collections.Concurrent;
 using System.Net;
 using UnityEngine;
@@ -37,6 +38,8 @@ namespace Practice.Manager.Server
 	public class DediServerManager : UDPNetworkTransport
 	{
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
+
+		public Action<PlayerInput> OnGetInputAction { get; set; }
 
 		public override void Init()
 		{

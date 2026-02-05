@@ -58,6 +58,9 @@ namespace Practice.Controller
 		private void Awake()
 		{
 			animator = GetComponent<Animator>();
+
+			if (ServerManagers.Dedi is DediServerManager server) server.OnGetInputAction += OnGetInput;
+			if (ServerManagers.Dedi is DediClientManager client) client.OnGetSnapshotAction += OnGetSnapshot;
 		}
 
 		private void Update()

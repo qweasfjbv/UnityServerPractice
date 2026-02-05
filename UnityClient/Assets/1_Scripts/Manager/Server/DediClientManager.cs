@@ -1,4 +1,6 @@
-﻿using Practice.Utils;
+﻿using Practice.Controller;
+using Practice.Utils;
+using System;
 using System.Net;
 using System.Threading;
 using UnityEngine;
@@ -17,6 +19,8 @@ namespace Practice.Manager.Server
 	public class DediClientManager : UDPNetworkTransport
 	{
 		private IPEndPoint serverEP;
+
+		public Action<PlayerState> OnGetSnapshotAction { get; set; }
 
 		public override void Init()
 		{
