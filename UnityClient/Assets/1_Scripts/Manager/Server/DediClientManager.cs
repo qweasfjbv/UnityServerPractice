@@ -56,9 +56,15 @@ namespace Practice.Manager.Server
 			switch (type)
 			{
 				case PacketType.S2C_Pong:
-					Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
+					{
+						Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
+					}
 					break;
 				case PacketType.S2C_Snapshot:
+					{
+						PlayerState snapshot = Serializer.Deserialize<PlayerState>(out _, packet.data);
+						OnGetSnapshotAction.Invoke(snapshot);
+					}
 					break;
 			}
 		}

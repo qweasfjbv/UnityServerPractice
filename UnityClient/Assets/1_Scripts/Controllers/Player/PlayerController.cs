@@ -65,7 +65,7 @@ namespace Practice.Controller
 
 		private void Update()
 		{
-
+			ApplyState(curState);
 		}
 
 		private void FixedUpdate()
@@ -107,5 +107,10 @@ namespace Practice.Controller
 			return state;
 		}
 
+		private void ApplyState(PlayerState state)
+		{
+			// TODO
+			// - Apply state to player
+		}
 	}
 }

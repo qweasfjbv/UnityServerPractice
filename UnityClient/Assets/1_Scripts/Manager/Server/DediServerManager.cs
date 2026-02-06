@@ -84,7 +84,8 @@ namespace Practice.Manager.Server
 					break;
 				case PacketType.C2S_Input:
 					{
-
+						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
+						OnGetInputAction.Invoke(input);
 					}
 					break;
 			}
