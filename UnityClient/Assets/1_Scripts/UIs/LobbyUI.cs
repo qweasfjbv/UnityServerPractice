@@ -1,8 +1,8 @@
-using Practice.Manager.Server;
+using FPS.Manager.Server;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Practice.UI
+namespace FPS.UI
 {
     public class LobbyUI : MonoBehaviour
     {
@@ -19,10 +19,7 @@ namespace Practice.UI
 		int count = 0;
 		private void Update()
 		{
-			if (Input.GetKeyDown(KeyCode.Space))
-			{
-				ServerManagers.Lobby.SendString("HELLO" + count++);
-			}
+
 		}
 
 	}

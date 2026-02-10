@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Practice.Weapons
+namespace FPS.Weapons
 {
     /// <summary>
     /// 

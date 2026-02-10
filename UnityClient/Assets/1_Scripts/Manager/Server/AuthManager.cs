@@ -1,4 +1,4 @@
-using Practice.Utils;
+using FPS.Utils;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	[System.Serializable]
     public class LoginRequest

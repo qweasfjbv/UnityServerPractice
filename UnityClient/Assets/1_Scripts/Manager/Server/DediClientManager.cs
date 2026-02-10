@@ -1,11 +1,11 @@
-﻿using Practice.Controller;
-using Practice.Utils;
+﻿using FPS.Controller;
+using FPS.Utils;
 using System;
 using System.Net;
 using System.Threading;
 using UnityEngine;
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	/// <summary>
 	/// 
@@ -28,6 +28,8 @@ namespace Practice.Manager.Server
 
 			// TODO - PORT will be changed by GameServerManager
 			serverEP = new IPEndPoint(IPAddress.Parse(Constants.IP_ADDR), Constants.PORT_DEDI);
+			
+			// Send Ping per 1000ms
 			new Thread(() =>
 			{
 				while (true)
@@ -43,11 +45,6 @@ namespace Practice.Manager.Server
 		public override void OnUpdate()
 		{
 			base.OnUpdate();
-
-			if (Input.GetKeyDown(KeyCode.Alpha1))
-			{
-				Send(serverEP, Serializer.Serialize<int>(PacketType.C2S_Ping, 1));
-			}
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)

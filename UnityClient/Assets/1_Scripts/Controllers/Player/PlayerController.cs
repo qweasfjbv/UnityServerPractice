@@ -1,9 +1,10 @@
-using Practice.Manager.Server;
-using Practice.Utils;
+using FPS.Manager.Game;
+using FPS.Manager.Server;
+using FPS.Utils;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace Practice.Controller
+namespace FPS.Controller
 {
 	/// <summary>
 	/// Client -> Server
@@ -15,6 +16,7 @@ namespace Practice.Controller
 		public int tick;
 		public Vector2 move;
 		public bool isJump;
+		public bool isCrouch;
 		public float yaw;
 	}
 
@@ -35,6 +37,7 @@ namespace Practice.Controller
     public partial class PlayerController : MonoBehaviour
     {
 		private const int BUFFER_SIZE = 1024;
+		private const float TICK_DT = 1f / 60f;
 
 		[Header("----------Bindings----------")]
 		[SerializeField] private Transform targetCamera;
@@ -54,6 +57,7 @@ namespace Practice.Controller
 		private PlayerState[] stateBuffer = new PlayerState[BUFFER_SIZE];
 
 		private int currentTick = 0;
+		private float timer = 0f;
 
 		private void Awake()
 		{
@@ -65,29 +69,26 @@ namespace Practice.Controller
 
 		private void Update()
 		{
-			ApplyState(curState);
-		}
-
-		private void FixedUpdate()
-		{
-			int tick = currentTick++;
-
-			PlayerInput input = GetInput();
-			input.tick = tick;
-
-			int index = tick % BUFFER_SIZE;
-
-			inputBuffer[index] = input;
-
-			curState = Simulate(curState, input, Time.fixedDeltaTime);
-			stateBuffer[index] = curState;
-
-			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
+#if !UNITY_EDITOR && UNITY_SERVER
+			ServerPlayerUpdate();
+#else
+			ClientPlayerUpdate();
+#endif
 		}
 
 		/** Common Logic **/
-		private PlayerInput GetInput()
+		private PlayerInput GetInput(int tick)
 		{
+			PlayerInput input;
+
+			input.tick = tick;
+			input.move = Managers.Input.IA.Player.Move.ReadValue<Vector2>();
+			input.isJump = Managers.Input.IA.Player.Jump.IsPressed();
+			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
+
+			// TODO 
+			// input.yaw = 
+
 			return new PlayerInput();
 		}
 

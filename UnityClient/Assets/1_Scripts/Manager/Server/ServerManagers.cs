@@ -5,7 +5,7 @@ using UnityEngine;
 using System.IO;
 #endif
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	[DefaultExecutionOrder(-100)]
 	public class ServerManagers : MonoBehaviour

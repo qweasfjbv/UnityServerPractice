@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Practice.Manager.Game
+namespace FPS.Manager.Game
 {
 	[DefaultExecutionOrder(-100)]
 	public class Managers : MonoBehaviour
@@ -27,7 +27,9 @@ namespace Practice.Manager.Game
 		}
 
 		private static SceneManagerEx scene = new SceneManagerEx();
+		private static InputManager input = new InputManager();
 
 		public static SceneManagerEx Scene => scene;
+		public static InputManager Input => input;	
 	}
 }

@@ -1,4 +1,4 @@
-namespace Practice.Utils
+namespace FPS.Utils
 {
 	public static class Constants
     {

@@ -1,6 +1,6 @@
 ﻿
 
-namespace Practice.Utils
+namespace FPS.Utils
 {
 	public class RingBuffer<T>
 	{

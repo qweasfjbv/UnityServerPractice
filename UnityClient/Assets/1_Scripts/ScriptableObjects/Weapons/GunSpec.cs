@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Practice.SO
+namespace FPS.SO
 {
 	[CreateAssetMenu(fileName = "GunSpec", menuName = "WeaponSpec/GunSpec")]
 	public class GunSpec : ScriptableObject

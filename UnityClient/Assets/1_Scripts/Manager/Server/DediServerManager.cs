@@ -1,11 +1,11 @@
-﻿using Practice.Controller;
-using Practice.Utils;
+﻿using FPS.Controller;
+using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
 using UnityEngine;
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	public class ClientConnection
 	{
@@ -89,6 +89,12 @@ namespace Practice.Manager.Server
 					}
 					break;
 			}
+		}
+
+		public override void Send(IPEndPoint destEP, byte[] payload)
+		{
+			if (destEP == null) return;
+			base.Send(destEP, payload);
 		}
 	}
 }

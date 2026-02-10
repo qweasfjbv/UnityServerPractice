@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace Practice.Utils
+namespace FPS.Utils
 {
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct NetVector3

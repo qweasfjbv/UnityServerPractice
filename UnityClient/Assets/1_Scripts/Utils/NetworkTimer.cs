@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Practice.Utils
+namespace FPS.Utils
 {
 	public static class NetworkTimer
 	{

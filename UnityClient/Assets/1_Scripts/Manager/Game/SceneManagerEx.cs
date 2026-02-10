@@ -1,6 +1,6 @@
 using UnityEngine.SceneManagement;
 
-namespace Practice.Manager.Game
+namespace FPS.Manager.Game
 {
 	public class SceneManagerEx
 	{

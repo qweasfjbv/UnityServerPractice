@@ -1,4 +1,4 @@
-﻿using Practice.Utils;
+﻿using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	/// <summary>
 	/// 
@@ -16,17 +16,16 @@ namespace Practice.Manager.Server
 	public abstract class UDPNetworkTransport
 	{
 		protected UdpClient udp;
-		protected Thread recvThread;
-		protected bool isRunning;
-
 		protected IPEndPoint localEP;
+		
+		protected bool isRunning;
+		protected Thread recvThread;
 		protected ConcurrentQueue<UdpPacket> recvQueue = new();
 
 		// Deserialize, Switch packetType, Update game state ...
 		public virtual void Init()
 		{
 			localEP = new IPEndPoint(IPAddress.Any, Constants.PORT_DEDI);
-
 			udp = new UdpClient(localEP);
 
 			recvThread = new Thread(ReceiveLoop);

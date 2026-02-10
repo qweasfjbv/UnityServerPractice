@@ -1,5 +1,5 @@
 ﻿
-namespace Practice.Utils
+namespace FPS.Utils
 {
 	public enum PacketType : byte
 	{

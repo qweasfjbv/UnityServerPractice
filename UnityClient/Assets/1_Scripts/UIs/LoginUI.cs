@@ -1,10 +1,10 @@
-using Practice.Manager.Game;
-using Practice.Manager.Server;
+using FPS.Manager.Game;
+using FPS.Manager.Server;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Practice.UI
+namespace FPS.UI
 {
     public class LoginUI : MonoBehaviour
     {

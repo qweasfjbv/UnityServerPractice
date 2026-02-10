@@ -1,11 +1,11 @@
-using Practice.Utils;
+using FPS.Utils;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Practice.Manager.Server
+namespace FPS.Manager.Server
 {
 	public class LobbyManager
 	{
