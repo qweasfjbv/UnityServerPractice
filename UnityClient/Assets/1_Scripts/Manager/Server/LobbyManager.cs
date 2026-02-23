@@ -100,7 +100,6 @@ namespace FPS.Manager.Server
 						break;
 
 					string msg = Encoding.UTF8.GetString(buffer, 0, size);
-					Debug.Log("RECV: " + msg);
 				}
 			}
 			catch (System.Exception e)

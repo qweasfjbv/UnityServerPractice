@@ -4,7 +4,7 @@ namespace FPS.Manager.Game
 	public class InputManager
 	{
 		private InputActions inputActions;
-		public InputActions IA;
+		public InputActions IA { get => inputActions; }
 
 		public void Init()
 		{

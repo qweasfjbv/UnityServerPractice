@@ -24,6 +24,8 @@ namespace FPS.Manager.Game
 			{
 				Destroy(this.gameObject);
 			}
+
+			input.Init();
 		}
 
 		private static SceneManagerEx scene = new SceneManagerEx();
