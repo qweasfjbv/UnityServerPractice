@@ -446,7 +446,7 @@ GameObject:
   - component: {fileID: 646348749}
   - component: {fileID: 646348748}
   - component: {fileID: 646348747}
-  m_Layer: 11
+  m_Layer: 9
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1778,13 +1778,14 @@ MonoBehaviour:
     m_Bits: 3584
   groundMask:
     serializedVersion: 2
-    m_Bits: 2560
+    m_Bits: 512
   maxWalkSpeed: 3
-  maxRunSpeed: 5
+  maxRunSpeed: 7
+  maxFallSpeed: 10
   walkAccel: 30
   groundFriction: 8
-  airAccel: 0
-  airFriction: 0
+  airAccel: 20
+  airFriction: 4
   gravity: 13
   jumpForce: 4
 --- !u!4 &6913703098248084677

@@ -1,3 +1,5 @@
+using FPS.Manager.Server;
+using FPS.Utils;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -30,15 +32,57 @@ namespace FPS.Controller
 			stateBuffer[index] = curState;
 			ApplyState(curState);
 
-			// ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
+			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
 		}
 
 		private void OnGetSnapshot(PlayerState state)
 		{
-			// TODO
-			// - Check tick
-			// - Re-simulate to current tick
-			// - Reconciliation
+			PlayerState simulateState = stateBuffer[state.tick];
+			for (int i = state.tick + 1; i <= currentTick % BUFFER_SIZE; i++)
+			{
+				simulateState = Simulate(simulateState, inputBuffer[i], TICK_DT);
+			}
+
+			Reconcile(simulateState);
+			ApplyState(curState);
+			stateBuffer[currentTick] = curState;
+		}
+
+		// Hybrid Reconciliation
+		private void Reconcile(PlayerState rewind)
+		{
+			Vector3 localPos = curState.position;
+			Vector3 serverPos = rewind.position;
+
+			float error = Vector3.Distance(localPos, serverPos);
+
+			// Large Error -> TP
+			if (error > TELEPORT)
+			{
+				curState = rewind;
+				return;
+			}
+
+			// Medium Error -> Snap
+			if (error > SNAP_DIST)
+			{
+				curState.position = serverPos;
+				curState.velocity = rewind.velocity;
+				return;
+			}
+
+			// Small Error -> Lerp
+			curState.position = Vector3.Lerp(
+				localPos,
+				serverPos,
+				SMOOTH_RATE
+			);
+
+			curState.velocity = Vector3.Lerp(
+				curState.velocity,
+				rewind.velocity,
+				SMOOTH_RATE
+			);
 		}
 	}
 }

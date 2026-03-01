@@ -15,7 +15,6 @@ namespace FPS.Controller
 		public int tick;
 		public Vector2 move;
 		public bool isJump;
-		public bool isRun;
 		public bool isCrouch;
 
 		public float yaw;
@@ -46,8 +45,20 @@ namespace FPS.Controller
     [RequireComponent(typeof(Animator))]
     public partial class PlayerController : MonoBehaviour
     {
+		// CSP
 		private const int BUFFER_SIZE = 1024;
 		private const float TICK_DT = 1f / 60f;
+
+		// Reconciliation
+		const float SNAP_DIST = 0.3f;
+		const float TELEPORT = 2.0f;
+		const float SMOOTH_RATE = 0.08f;
+
+		// Collision
+		private const float HEIGHT = 3.6f;
+		private const float RADIUS = 0.3f;
+		private const float SKIN_WIDTH = 0.01f;
+		private const float GROUND_DETECT_DIST = 0.3f;
 
 		private Animator animator;
 
@@ -61,6 +72,7 @@ namespace FPS.Controller
 		[Header("----------Physics Params----------")]
 		[SerializeField] private float maxWalkSpeed;
 		[SerializeField] private float maxRunSpeed;
+		[SerializeField] private float maxFallSpeed;
 		[SerializeField] private float walkAccel;
 		[SerializeField] private float groundFriction;
 		[SerializeField] private float airAccel;
@@ -74,10 +86,6 @@ namespace FPS.Controller
 		private PlayerState curState;
 		private PlayerInput[] inputBuffer = new PlayerInput[BUFFER_SIZE];
 		private PlayerState[] stateBuffer = new PlayerState[BUFFER_SIZE];
-
-		private const float height = 3.6f;
-		private const float radius = 0.3f;
-		private const float skinWidth = 0.01f;
 
 		private int currentTick = 0;
 		private float timer = 0f;
@@ -125,7 +133,6 @@ namespace FPS.Controller
 			input.tick = tick;
 			input.move = Managers.Input.IA.Player.Move.ReadValue<Vector2>();
 			input.isJump = Managers.Input.IA.Player.Jump.IsPressed();
-			input.isRun = Managers.Input.IA.Player.Run.IsPressed();
 			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
 
 			Vector3 dir = targetCamera.forward;
@@ -137,8 +144,7 @@ namespace FPS.Controller
 
 		private PlayerState Simulate(PlayerState state, PlayerInput input, float dt)
 		{
-			// Ground Check (임시)
-			state.isGrounded = CheckGround(state);
+			state.isGrounded = CheckGround(state, out _);
 
 			// Accel/Friction
 			Vector3 wishDir = new Vector3(input.move.x, 0, input.move.y);
@@ -173,6 +179,15 @@ namespace FPS.Controller
 			// Gravity
 			state.velocity += Vector3.down * gravity * dt;
 
+			// Velocity Limits
+			Vector2 horz = new Vector2(state.velocity.x, state.velocity.z);
+			if (horz.magnitude > maxWalkSpeed)
+			{
+				horz = horz.normalized * maxWalkSpeed;
+			}
+			float vert = Mathf.Clamp(state.velocity.y, -maxFallSpeed, maxFallSpeed);
+			state.velocity = new Vector3(horz.x, vert, horz.y);
+
 			// Collision Move
 			MoveWithCollision(ref state, dt);
 
@@ -188,20 +203,20 @@ namespace FPS.Controller
 			{
 				if (remaining.magnitude < 0.0001f) break;
 
-				Vector3 bottom = state.position + Vector3.up * radius;
-				Vector3 top = bottom + Vector3.up * (height - radius * 2);
+				Vector3 bottom = state.position + Vector3.up * RADIUS;
+				Vector3 top = bottom + Vector3.up * (HEIGHT - RADIUS * 2);
 
 				if (Physics.CapsuleCast(
 					bottom,
 					top,
-					radius,
+					RADIUS,
 					remaining.normalized,
 					out RaycastHit hit,
-					remaining.magnitude + skinWidth,
+					remaining.magnitude + SKIN_WIDTH,
 					collisionMask,
 					QueryTriggerInteraction.Ignore))
 				{
-					float moveDist = Mathf.Max(0, hit.distance - skinWidth);
+					float moveDist = Mathf.Max(0, hit.distance - SKIN_WIDTH);
 					state.position += remaining.normalized * moveDist;
 
 					remaining = Vector3.ProjectOnPlane(remaining - (remaining.normalized * moveDist), hit.normal);
@@ -216,10 +231,23 @@ namespace FPS.Controller
 			}
 		}
 
-		private bool CheckGround(PlayerState state)
+		private bool CheckGround(PlayerState state, out float groundY)
 		{
-			return true;
-			// TODO
+			Vector3 origin = transform.position + Vector3.up * 0.1f;
+
+			if (Physics.Raycast(
+				origin,
+				Vector3.down,
+				out RaycastHit hit,
+				GROUND_DETECT_DIST,
+				groundMask))
+			{
+				groundY = hit.point.y;
+				return true;
+			}
+
+			groundY = 0f;
+			return false;
 		}
 
 		private void ApplyState(PlayerState state)

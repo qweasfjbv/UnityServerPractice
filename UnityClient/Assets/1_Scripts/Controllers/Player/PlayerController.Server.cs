@@ -1,3 +1,6 @@
+using FPS.Manager.Server;
+using FPS.Utils;
+using System.Net;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -9,12 +12,14 @@ namespace FPS.Controller
 
 		}
 
-		private void OnGetInput(PlayerInput input)
+		private void OnGetInput(IPEndPoint clientEP, PlayerInput input)
 		{
 			curState = Simulate(curState, input, Time.fixedDeltaTime);
-			// TODO
-			// - Simulate 
-			// - and send player's Snapshot
+			inputBuffer[input.tick] = input;
+			stateBuffer[input.tick] = curState;
+			ApplyState(curState);
+
+			ServerManagers.Dedi.Send(clientEP, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curState));
 		}
 	}
 }
