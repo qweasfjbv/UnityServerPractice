@@ -15,6 +15,8 @@ namespace FPS.Controller
 		private void OnGetInput(IPEndPoint clientEP, PlayerInput input)
 		{
 			curState = Simulate(curState, input, Time.fixedDeltaTime);
+
+			curState.tick = input.tick;
 			inputBuffer[input.tick] = input;
 			stateBuffer[input.tick] = curState;
 			ApplyState(curState);

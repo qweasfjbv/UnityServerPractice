@@ -253,12 +253,19 @@ namespace FPS.Controller
 		private void ApplyState(PlayerState state)
 		{
 			transform.position = state.position;
+			Debug.Log("APPLY STATE : " + transform.position);
 
 			animator.SetFloat("speed", state.velocity.magnitude / maxRunSpeed * 1.4f);
 			animator.SetFloat("speedX", state.velocity.x / maxRunSpeed);
 			animator.SetFloat("speedY", state.velocity.z / maxRunSpeed);
 			// TODO
 			// - Apply state to player
+		}
+
+		private int IncreaseTick()
+		{
+			currentTick = (currentTick + 1) % BUFFER_SIZE;
+			return currentTick;
 		}
 	}
 }

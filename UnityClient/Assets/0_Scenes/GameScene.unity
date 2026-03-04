@@ -1785,7 +1785,7 @@ MonoBehaviour:
   walkAccel: 30
   groundFriction: 8
   airAccel: 20
-  airFriction: 4
+  airFriction: 4.13
   gravity: 13
   jumpForce: 4
 --- !u!4 &6913703098248084677
