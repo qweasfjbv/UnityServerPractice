@@ -31,7 +31,6 @@ namespace FPS.Controller
 			curState = Simulate(curState, input, TICK_DT);
 			stateBuffer[index] = curState;
 
-			Debug.Log("ApplyState : " + curState.position);
 			ApplyState(curState);
 
 			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
@@ -39,20 +38,17 @@ namespace FPS.Controller
 
 		private void OnGetSnapshot(PlayerState state)
 		{
-			PlayerState simulateState = stateBuffer[state.tick];
+			PlayerState simulateState = state;
 
 			int tick = (state.tick + 1) % BUFFER_SIZE;
 
-			Debug.Log("TICK : " + tick);
 			while (tick != (currentTick + 1) % BUFFER_SIZE)
 			{
 				simulateState = Simulate(simulateState, inputBuffer[tick], TICK_DT);
 				tick = (tick + 1) % BUFFER_SIZE;
 			}
-			Debug.Log("TICK AFTER : " + tick);
 
 			Reconcile(simulateState);
-			Debug.Log("Reconcile : " + simulateState.position);
 			ApplyState(curState);
 			stateBuffer[currentTick] = curState;
 		}
@@ -69,7 +65,6 @@ namespace FPS.Controller
 			if (error > TELEPORT)
 			{
 				curState = rewind;
-				Debug.Log("RE : " + curState.position);
 				return;
 			}
 

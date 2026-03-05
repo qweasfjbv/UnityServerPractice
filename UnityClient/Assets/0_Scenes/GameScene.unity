@@ -1788,6 +1788,7 @@ MonoBehaviour:
   airFriction: 4.13
   gravity: 13
   jumpForce: 4
+  follower: {fileID: 0}
 --- !u!4 &6913703098248084677
 Transform:
   m_ObjectHideFlags: 0
