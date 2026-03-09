@@ -1,6 +1,8 @@
 using FPS.Manager.Game;
 using FPS.Manager.Server;
+using FPS.Weapons;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -80,6 +82,9 @@ namespace FPS.Controller
 		[SerializeField] private float gravity;
 		[SerializeField] private float jumpForce;
 
+		[Header("----------Debug----------")]
+		[SerializeField, ReadOnly] private GunBase currentWeapon = null;
+
 		private bool isReady = false;
 		private PlayerControllerType controllerType = PlayerControllerType.None;
 
@@ -123,6 +128,18 @@ namespace FPS.Controller
 					Debug.LogError("Wrong Controller Type");
 					break;
 			}
+		}
+
+		private void OnAnimatorIK(int layerIndex)
+		{
+			if (currentWeapon == null) return;
+			if (currentWeapon.LeftHandTarget == null) return;
+
+			animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
+			animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1f);
+
+			animator.SetIKPosition(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.position);
+			animator.SetIKRotation(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.rotation);
 		}
 
 		/** Common Logic **/
