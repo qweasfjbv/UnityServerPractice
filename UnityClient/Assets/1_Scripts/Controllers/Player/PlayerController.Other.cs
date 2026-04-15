@@ -1,4 +1,4 @@
-﻿
+﻿using FPS.Utils;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -9,10 +9,10 @@ namespace FPS.Controller
 		{
 			timer += Time.deltaTime;
 
-			while(timer >= TICK_DT)
+			while(timer >= Constants.TICK_DT)
 			{
 				Tick();
-				timer -= TICK_DT;
+				timer -= Constants.TICK_DT;
 			}
 		}
 		

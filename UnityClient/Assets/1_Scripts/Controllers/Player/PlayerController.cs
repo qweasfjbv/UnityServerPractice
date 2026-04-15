@@ -1,5 +1,6 @@
 using FPS.Manager.Game;
 using FPS.Manager.Server;
+using FPS.Systems;
 using FPS.Weapons;
 using System.Runtime.InteropServices;
 using Unity.Collections;
@@ -18,9 +19,9 @@ namespace FPS.Controller
 		public Vector2 move;
 		public bool isJump;
 		public bool isCrouch;
+		public bool isFired;
 
-		public float yaw;
-		public float pitch;
+		public Vector2 lookDir;
 	}
 
 	/// <summary>
@@ -49,7 +50,6 @@ namespace FPS.Controller
     {
 		// CSP
 		private const int BUFFER_SIZE = 1024;
-		private const float TICK_DT = 1f / 60f;
 
 		// Reconciliation
 		const float SNAP_DIST = 0.3f;
@@ -65,7 +65,9 @@ namespace FPS.Controller
 		private Animator animator;
 
 		[Header("----------Bindings----------")]
+		[SerializeField] private Transform cameraBoom;
 		[SerializeField] private Transform targetCamera;
+
 
 		[Header("----------Collision Layers----------")]
 		[SerializeField] private LayerMask collisionMask;
@@ -82,15 +84,21 @@ namespace FPS.Controller
 		[SerializeField] private float gravity;
 		[SerializeField] private float jumpForce;
 
+		[Header("----------Animation Params----------")]
+		[SerializeField] private float footOffset;
+
 		[Header("----------Debug----------")]
 		[SerializeField, ReadOnly] private GunBase currentWeapon = null;
 
 		private bool isReady = false;
 		private PlayerControllerType controllerType = PlayerControllerType.None;
 
-		private PlayerState curState;
+		private PlayerState curPlayerState = default;
+		private WeaponState curWeaponState = default;
+
 		private PlayerInput[] inputBuffer = new PlayerInput[BUFFER_SIZE];
 		private PlayerState[] stateBuffer = new PlayerState[BUFFER_SIZE];
+		private WeaponState[] weaponBuffer = new WeaponState[BUFFER_SIZE];
 
 		private int currentTick = 0;
 		private float timer = 0f;
@@ -134,12 +142,19 @@ namespace FPS.Controller
 		{
 			if (currentWeapon == null) return;
 			if (currentWeapon.LeftHandTarget == null) return;
+			if (currentWeapon.RightHandTarget == null) return;
 
 			animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
 			animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1f);
 
+			animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1f);
+			animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1f);
+
 			animator.SetIKPosition(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.position);
 			animator.SetIKRotation(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.rotation);
+
+			animator.SetIKPosition(AvatarIKGoal.RightHand, currentWeapon.RightHandTarget.position);
+			animator.SetIKRotation(AvatarIKGoal.RightHand, currentWeapon.RightHandTarget.rotation);
 		}
 
 		/** Common Logic **/
@@ -151,11 +166,13 @@ namespace FPS.Controller
 			input.move = Managers.Input.IA.Player.Move.ReadValue<Vector2>();
 			input.isJump = Managers.Input.IA.Player.Jump.IsPressed();
 			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
+			input.isFired = Managers.Input.IA.Player.Fire.IsPressed();
 
 			Vector3 dir = targetCamera.forward;
-			input.yaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-			input.pitch = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+			input.lookDir.x = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+			input.lookDir.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
 
+			animator.SetFloat("input", input.move.sqrMagnitude);
 			return input;
 		}
 
@@ -276,6 +293,28 @@ namespace FPS.Controller
 			animator.SetFloat("speedY", state.velocity.z / maxRunSpeed);
 			// TODO
 			// - Apply state to player
+		}
+
+		private float currentYaw = 0f;
+		private float currentPitch = 18f;
+		private void ApplyView(in PlayerInput input, in WeaponState weaponState)
+		{
+			float mouseX = Input.GetAxis("Mouse X");
+			float mouseY = Input.GetAxis("Mouse Y");
+
+			float sensitivity = 10f;
+
+			currentYaw += mouseX * sensitivity;
+			currentPitch -= mouseY * sensitivity;
+
+			float pitchLimit = 70f;
+			currentPitch = Mathf.Clamp(currentPitch, -pitchLimit, pitchLimit);
+			transform.rotation = Quaternion.Euler(0f, currentYaw, 0f); 
+			cameraBoom.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+
+			Debug.Log("CURRENT :" + currentPitch);
+			Debug.Log("PITCH :" + (-currentPitch / pitchLimit + .5f));
+			animator.SetFloat("pitch", -currentPitch / pitchLimit * .5f + .5f);
 		}
 
 		private int IncreaseTick()

@@ -15,10 +15,12 @@ namespace FPS.Weapons
     {
 		[Header("GunBase")]
 		[SerializeField] private GunSpec spec;
+		[SerializeField] private Transform rightHandTarget;
 		[SerializeField] private Transform leftHandTarget;
 		
 		public GunSpec Spec => spec;
 		public Transform LeftHandTarget => leftHandTarget;
+		public Transform RightHandTarget => rightHandTarget;
 
 		protected int totalAmmo = 0;
 		protected int currentAmmo = 0;

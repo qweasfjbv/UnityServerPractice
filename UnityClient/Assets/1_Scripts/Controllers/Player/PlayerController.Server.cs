@@ -14,14 +14,14 @@ namespace FPS.Controller
 
 		private void OnGetInput(IPEndPoint clientEP, PlayerInput input)
 		{
-			curState = Simulate(curState, input, Time.fixedDeltaTime);
+			curPlayerState = Simulate(curPlayerState, input, Time.fixedDeltaTime);
 
-			curState.tick = input.tick;
+			curPlayerState.tick = input.tick;
 			inputBuffer[input.tick] = input;
-			stateBuffer[input.tick] = curState;
-			ApplyState(curState);
+			stateBuffer[input.tick] = curPlayerState;
+			ApplyState(curPlayerState);
 
-			ServerManagers.Dedi.Send(clientEP, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curState));
+			ServerManagers.Dedi.Send(clientEP, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
 		}
 	}
 }

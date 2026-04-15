@@ -16,5 +16,11 @@ MonoBehaviour:
   fireRate: 2
   reloadTime: 2
   magazineSize: 30
-  maxAmmo: 180
-  reboundStrength: 1
+  maxAmmo: 179
+  recoilPrefile:
+    damping: 3
+    recovery: 3
+    pitchKickPattern:
+    - 10
+    yawKickPattern:
+    - 10

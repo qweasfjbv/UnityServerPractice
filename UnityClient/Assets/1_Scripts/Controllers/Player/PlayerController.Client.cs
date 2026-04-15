@@ -1,4 +1,5 @@
 using FPS.Manager.Server;
+using FPS.Systems;
 using FPS.Utils;
 using UnityEngine;
 
@@ -10,10 +11,10 @@ namespace FPS.Controller
 		{
 			timer += Time.deltaTime;
 
-			while (timer >= TICK_DT)
+			while (timer >= Constants.TICK_DT)
 			{
 				Tick();
-				timer -= TICK_DT;
+				timer -= Constants.TICK_DT;
 			}
 		}
 
@@ -28,10 +29,14 @@ namespace FPS.Controller
 
 			inputBuffer[index] = input;
 
-			curState = Simulate(curState, input, TICK_DT);
-			stateBuffer[index] = curState;
+			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
+			stateBuffer[index] = curPlayerState;
 
-			ApplyState(curState);
+			curWeaponState = WeaponSystem.SimulateWeapon(curWeaponState, input, currentWeapon.Spec, Constants.TICK_DT);
+			weaponBuffer[index] = curWeaponState;
+
+			ApplyState(curPlayerState);
+			ApplyView(input, curWeaponState);
 
 			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
 		}
@@ -44,19 +49,19 @@ namespace FPS.Controller
 
 			while (tick != (currentTick + 1) % BUFFER_SIZE)
 			{
-				simulateState = Simulate(simulateState, inputBuffer[tick], TICK_DT);
+				simulateState = Simulate(simulateState, inputBuffer[tick], Constants.TICK_DT);
 				tick = (tick + 1) % BUFFER_SIZE;
 			}
 
 			Reconcile(simulateState);
-			ApplyState(curState);
-			stateBuffer[currentTick] = curState;
+			ApplyState(curPlayerState);
+			stateBuffer[currentTick] = curPlayerState;
 		}
 
 		// Hybrid Reconciliation
 		private void Reconcile(PlayerState rewind)
 		{
-			Vector3 localPos = curState.position;
+			Vector3 localPos = curPlayerState.position;
 			Vector3 serverPos = rewind.position;
 
 			float error = Vector3.Distance(localPos, serverPos);
@@ -64,27 +69,27 @@ namespace FPS.Controller
 			// Large Error -> TP
 			if (error > TELEPORT)
 			{
-				curState = rewind;
+				curPlayerState = rewind;
 				return;
 			}
 
 			// Medium Error -> Snap
 			if (error > SNAP_DIST)
 			{
-				curState.position = serverPos;
-				curState.velocity = rewind.velocity;
+				curPlayerState.position = serverPos;
+				curPlayerState.velocity = rewind.velocity;
 				return;
 			}
 
 			// Small Error -> Lerp
-			curState.position = Vector3.Lerp(
+			curPlayerState.position = Vector3.Lerp(
 				localPos,
 				serverPos,
 				SMOOTH_RATE
 			);
 
-			curState.velocity = Vector3.Lerp(
-				curState.velocity,
+			curPlayerState.velocity = Vector3.Lerp(
+				curPlayerState.velocity,
 				rewind.velocity,
 				SMOOTH_RATE
 			);

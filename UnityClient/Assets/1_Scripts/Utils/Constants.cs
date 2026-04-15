@@ -13,5 +13,9 @@ namespace FPS.Utils
 		// UDP Port
 		public static readonly int PORT_DEDI    = 61397;
 
-    }
+        // CSP
+		public static readonly int TICK_RATE = 60;
+		public static readonly float TICK_DT = 1f / TICK_RATE;
+
+	}
 }
