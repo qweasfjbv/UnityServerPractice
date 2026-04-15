@@ -8,5 +8,6 @@ namespace FPS.Utils
 
 		C2S_Ping = 100,
 		C2S_Input,
+		C2S_AnimParam,
 	}
 }

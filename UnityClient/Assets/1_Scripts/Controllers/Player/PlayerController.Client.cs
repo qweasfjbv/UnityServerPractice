@@ -37,8 +37,10 @@ namespace FPS.Controller
 
 			ApplyState(curPlayerState);
 			ApplyView(input, curWeaponState);
+			ApplyAnimParams(input, curPlayerState, curWeaponState, out PlayerAnimParams animParams);
 
-			ServerManagers.Dedi.Send(null, Serializer.Serialize<PlayerInput>(PacketType.C2S_Input, input));
+			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
+			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_AnimParam, animParams));
 		}
 
 		private void OnGetSnapshot(PlayerState state)

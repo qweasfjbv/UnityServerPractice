@@ -70,14 +70,6 @@ BlendTree:
     m_DirectBlendParameter: input
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 3601097364874758033, guid: e00a4a41830ca604aa6c3fb01dc793e4, type: 3}
-    m_Threshold: 0.5
-    m_Position: {x: 0, y: 0}
-    m_TimeScale: 1
-    m_CycleOffset: 0
-    m_DirectBlendParameter: input
-    m_Mirror: 0
-  - serializedVersion: 2
     m_Motion: {fileID: 7400000, guid: b4d75c0f875fdd9469264e9e96738fa4, type: 2}
     m_Threshold: 1
     m_Position: {x: 0, y: 0}
@@ -380,7 +372,7 @@ AnimatorController:
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
   - serializedVersion: 5
-    m_Name: Arms
+    m_Name: Upper
     m_StateMachine: {fileID: 8025151915220725642}
     m_Mask: {fileID: 31900000, guid: 5a7d40cf16baea4499f99c66b0687608, type: 2}
     m_Motions: []
@@ -392,7 +384,7 @@ AnimatorController:
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
   - serializedVersion: 5
-    m_Name: Legs
+    m_Name: Lower
     m_StateMachine: {fileID: 580421331382894377}
     m_Mask: {fileID: 31900000, guid: 517aa01cec9ba294d91b4296b54efdeb, type: 2}
     m_Motions: []
@@ -410,7 +402,7 @@ AnimatorStateMachine:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Legs
+  m_Name: Lower
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -8105576517127509561}
@@ -662,14 +654,14 @@ AnimatorStateMachine:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Arms
+  m_Name: Upper
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: 6203627248686578934}
-    m_Position: {x: 250, y: 160, z: 0}
+    m_Position: {x: 250, y: 200, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2413330485599582316}
-    m_Position: {x: 550, y: 70, z: 0}
+    m_Position: {x: 490, y: 200, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []

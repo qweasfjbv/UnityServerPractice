@@ -37,6 +37,15 @@ namespace FPS.Controller
 		public bool isGrounded;
 	}
 
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct PlayerAnimParams
+	{
+		public Vector2 speed;
+		public float input;
+		public float pitch;
+		public bool isAim;
+	}
+
 	public enum PlayerControllerType
 	{
 		None = 0,
@@ -84,6 +93,10 @@ namespace FPS.Controller
 		[SerializeField] private float gravity;
 		[SerializeField] private float jumpForce;
 
+		[Header("----------View Params----------")]
+		[SerializeField] private float mouseSensitivity = 10f;
+		[SerializeField] private float viewPitchLimit = 70f;
+
 		[Header("----------Animation Params----------")]
 		[SerializeField] private float footOffset;
 
@@ -106,6 +119,8 @@ namespace FPS.Controller
 		private void Awake()
 		{
 			animator = GetComponent<Animator>();
+
+			Cursor.visible = false;
 
 			if (ServerManagers.Dedi is DediServerManager server)
 			{
@@ -172,7 +187,6 @@ namespace FPS.Controller
 			input.lookDir.x = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
 			input.lookDir.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
 
-			animator.SetFloat("input", input.move.sqrMagnitude);
 			return input;
 		}
 
@@ -181,7 +195,7 @@ namespace FPS.Controller
 			state.isGrounded = CheckGround(state, out _);
 
 			// Accel/Friction
-			Vector3 wishDir = new Vector3(input.move.x, 0, input.move.y);
+			Vector3 wishDir = Quaternion.Euler(0f, input.lookDir.x, 0f) * new Vector3(input.move.x, 0, input.move.y);
 			float accel = state.isGrounded ? walkAccel : airAccel;
 			float friction = state.isGrounded ? groundFriction : airFriction;
 
@@ -284,15 +298,9 @@ namespace FPS.Controller
 			return false;
 		}
 
-		private void ApplyState(PlayerState state)
+		private void ApplyState(in PlayerState state)
 		{
 			transform.position = state.position;
-			
-			animator.SetFloat("speed", state.velocity.magnitude / maxRunSpeed * 1.4f);
-			animator.SetFloat("speedX", state.velocity.x / maxRunSpeed);
-			animator.SetFloat("speedY", state.velocity.z / maxRunSpeed);
-			// TODO
-			// - Apply state to player
 		}
 
 		private float currentYaw = 0f;
@@ -302,19 +310,30 @@ namespace FPS.Controller
 			float mouseX = Input.GetAxis("Mouse X");
 			float mouseY = Input.GetAxis("Mouse Y");
 
-			float sensitivity = 10f;
+			currentYaw += mouseX * mouseSensitivity;
+			currentPitch -= mouseY * mouseSensitivity;
 
-			currentYaw += mouseX * sensitivity;
-			currentPitch -= mouseY * sensitivity;
-
-			float pitchLimit = 70f;
-			currentPitch = Mathf.Clamp(currentPitch, -pitchLimit, pitchLimit);
+			currentPitch = Mathf.Clamp(currentPitch, -viewPitchLimit, viewPitchLimit);
 			transform.rotation = Quaternion.Euler(0f, currentYaw, 0f); 
 			cameraBoom.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+		}
 
-			Debug.Log("CURRENT :" + currentPitch);
-			Debug.Log("PITCH :" + (-currentPitch / pitchLimit + .5f));
-			animator.SetFloat("pitch", -currentPitch / pitchLimit * .5f + .5f);
+		private void ApplyAnimParams(in PlayerInput input, in PlayerState state, in WeaponState weaponState
+			, out PlayerAnimParams animParams)
+		{
+			animParams.input = input.move.sqrMagnitude;
+			animParams.speed.x = state.velocity.x / maxRunSpeed;
+			animParams.speed.y = state.velocity.z / maxRunSpeed;
+			animParams.pitch = -currentPitch / viewPitchLimit * .5f + .5f;
+			animParams.isAim = true;
+
+			animator.SetFloat("input", animParams.input);
+
+			animator.SetFloat("speedX", animParams.speed.x);
+			animator.SetFloat("speedY", animParams.speed.y);
+			animator.SetFloat("speed", animParams.speed.x * animParams.speed.y * maxRunSpeed * 1.4f);
+
+			animator.SetFloat("pitch", animParams.pitch);
 		}
 
 		private int IncreaseTick()
