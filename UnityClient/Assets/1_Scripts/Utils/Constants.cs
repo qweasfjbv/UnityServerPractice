@@ -16,6 +16,7 @@ namespace FPS.Utils
         // CSP
 		public static readonly int TICK_RATE = 60;
 		public static readonly float TICK_DT = 1f / TICK_RATE;
+		public static readonly int BUFFER_SIZE = 1024;
 
 	}
 }

@@ -13,14 +13,13 @@ MonoBehaviour:
   m_Name: Gun_SMG_K
   m_EditorClassIdentifier: 
   damage: 10
-  fireRate: 2
+  fireRate: 7
   reloadTime: 2
-  magazineSize: 30
+  magazineSize: 100
   maxAmmo: 179
   recoilPrefile:
-    damping: 3
-    recovery: 3
-    pitchKickPattern:
-    - 10
-    yawKickPattern:
-    - 10
+    damping: 5
+    recovery: 10
+    permanentRatio: 0.5
+    pitchKick: 50
+    yawKick: 50

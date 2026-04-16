@@ -1,6 +1,7 @@
 using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
+using FPS.Utils;
 using FPS.Weapons;
 using System.Runtime.InteropServices;
 using Unity.Collections;
@@ -15,13 +16,12 @@ namespace FPS.Controller
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct PlayerInput
 	{
-		public int tick;
 		public Vector2 move;
+		public Vector2 lookDir;
+		public int tick;
 		public bool isJump;
 		public bool isCrouch;
 		public bool isFired;
-
-		public Vector2 lookDir;
 	}
 
 	/// <summary>
@@ -57,9 +57,6 @@ namespace FPS.Controller
     [RequireComponent(typeof(Animator))]
     public partial class PlayerController : MonoBehaviour
     {
-		// CSP
-		private const int BUFFER_SIZE = 1024;
-
 		// Reconciliation
 		const float SNAP_DIST = 0.3f;
 		const float TELEPORT = 2.0f;
@@ -109,9 +106,9 @@ namespace FPS.Controller
 		private PlayerState curPlayerState = default;
 		private WeaponState curWeaponState = default;
 
-		private PlayerInput[] inputBuffer = new PlayerInput[BUFFER_SIZE];
-		private PlayerState[] stateBuffer = new PlayerState[BUFFER_SIZE];
-		private WeaponState[] weaponBuffer = new WeaponState[BUFFER_SIZE];
+		private PlayerInput[] inputBuffer = new PlayerInput[Constants.BUFFER_SIZE];
+		private PlayerState[] stateBuffer = new PlayerState[Constants.BUFFER_SIZE];
+		private WeaponState[] weaponBuffer = new WeaponState[Constants.BUFFER_SIZE];
 
 		private int currentTick = 0;
 		private float timer = 0f;
@@ -313,9 +310,10 @@ namespace FPS.Controller
 			currentYaw += mouseX * mouseSensitivity;
 			currentPitch -= mouseY * mouseSensitivity;
 
-			currentPitch = Mathf.Clamp(currentPitch, -viewPitchLimit, viewPitchLimit);
-			transform.rotation = Quaternion.Euler(0f, currentYaw, 0f); 
-			cameraBoom.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+			currentPitch = Mathf.Clamp(currentPitch - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
+			float finalPitch = currentPitch - weaponState.recoilState.recoilOffset.x;
+			transform.rotation = Quaternion.Euler(0f, currentYaw + weaponState.recoilState.recoilOffset.y, 0f); 
+			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
 		}
 
 		private void ApplyAnimParams(in PlayerInput input, in PlayerState state, in WeaponState weaponState
@@ -324,7 +322,7 @@ namespace FPS.Controller
 			animParams.input = input.move.sqrMagnitude;
 			animParams.speed.x = state.velocity.x / maxRunSpeed;
 			animParams.speed.y = state.velocity.z / maxRunSpeed;
-			animParams.pitch = -currentPitch / viewPitchLimit * .5f + .5f;
+			animParams.pitch = -Mathf.Clamp(currentPitch - weaponState.recoilState.recoilOffset.x, -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
 			animParams.isAim = true;
 
 			animator.SetFloat("input", animParams.input);
@@ -334,11 +332,16 @@ namespace FPS.Controller
 			animator.SetFloat("speed", animParams.speed.x * animParams.speed.y * maxRunSpeed * 1.4f);
 
 			animator.SetFloat("pitch", animParams.pitch);
+
+			if (weaponState.lastFiredTick == input.tick)
+			{
+				animator.SetTrigger("isShoot");
+			}
 		}
 
 		private int IncreaseTick()
 		{
-			currentTick = (currentTick + 1) % BUFFER_SIZE;
+			currentTick = (currentTick + 1) % Constants.BUFFER_SIZE;
 			return currentTick;
 		}
 	}

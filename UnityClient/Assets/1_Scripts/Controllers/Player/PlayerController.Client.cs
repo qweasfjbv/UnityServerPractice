@@ -25,7 +25,7 @@ namespace FPS.Controller
 			PlayerInput input = GetInput(tick);
 			input.tick = tick;
 
-			int index = tick % BUFFER_SIZE;
+			int index = tick % Constants.BUFFER_SIZE;
 
 			inputBuffer[index] = input;
 
@@ -47,12 +47,12 @@ namespace FPS.Controller
 		{
 			PlayerState simulateState = state;
 
-			int tick = (state.tick + 1) % BUFFER_SIZE;
+			int tick = (state.tick + 1) % Constants.BUFFER_SIZE;
 
-			while (tick != (currentTick + 1) % BUFFER_SIZE)
+			while (tick != (currentTick + 1) % Constants.BUFFER_SIZE)
 			{
 				simulateState = Simulate(simulateState, inputBuffer[tick], Constants.TICK_DT);
-				tick = (tick + 1) % BUFFER_SIZE;
+				tick = (tick + 1) % Constants.BUFFER_SIZE;
 			}
 
 			Reconcile(simulateState);

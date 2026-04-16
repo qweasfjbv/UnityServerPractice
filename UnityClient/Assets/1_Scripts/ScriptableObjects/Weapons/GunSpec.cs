@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace FPS.SO
@@ -8,22 +7,17 @@ namespace FPS.SO
 	{
 		[SerializeField] private float damping;
 		[SerializeField] private float recovery;
-		[SerializeField] private List<float> pitchKickPattern = new();
-		[SerializeField] private List<float> yawKickPattern = new();
+		[SerializeField] private float permanentRatio;  // kick 보존율
+		[SerializeField] private float pitchKick;
+		[SerializeField] private float yawKick;
+
 
 		public float Damping => damping;
 		public float Recovery => recovery;
-
-		public float GetPitchKick(int shotsFired)
-		{
-			int index = Mathf.Min(shotsFired, pitchKickPattern.Count - 1);
-			return pitchKickPattern[index];
-		}
-		public float GetYawKick(int shotsFired)
-		{
-			int index = Mathf.Min(shotsFired, yawKickPattern.Count - 1);
-			return yawKickPattern[index];
-		}
+		public float PermanentRatio => permanentRatio;
+		public float RecoverableRatio => 1 - permanentRatio;
+		public float PitchKick => pitchKick;
+		public float YawKick => yawKick;
 	}
 
 	[CreateAssetMenu(fileName = "GunSpec", menuName = "WeaponSpec/GunSpec")]
