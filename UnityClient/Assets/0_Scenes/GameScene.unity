@@ -2030,7 +2030,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8009486250429061228}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -1.955569, y: 0.12758315, z: 100.088745}
 --- !u!4 &4136103045190573552
 Transform:
   m_ObjectHideFlags: 0
@@ -2237,12 +2237,13 @@ MonoBehaviour:
   maxFallSpeed: 10
   walkAccel: 50
   groundFriction: 8
-  airAccel: 20
+  airAccel: 20.1
   airFriction: 4.13
   gravity: 13
   jumpForce: 4
-  mouseSensitivity: 10
+  mouseSensitivity: 3
   viewPitchLimit: 70
+  rotationSpeed: 25
   footOffset: 0.23
   currentWeapon: {fileID: 2129556456}
 --- !u!1 &4832549873824099347
@@ -2570,7 +2571,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1948143132611972220}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -1.0536273, y: 28.895798, z: -0.9229041}
 --- !u!1 &5520336648271743048
 GameObject:
   m_ObjectHideFlags: 0
@@ -3235,7 +3236,7 @@ Transform:
   m_Children:
   - {fileID: 3421972896110129627}
   m_Father: {fileID: 5168021746219875279}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -2.1261184, y: 0.000014625253, z: -85.09476}
 --- !u!1 &8625793626716881150
 GameObject:
   m_ObjectHideFlags: 0

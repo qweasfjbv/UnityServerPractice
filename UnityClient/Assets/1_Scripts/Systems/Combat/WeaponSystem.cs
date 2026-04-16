@@ -52,10 +52,10 @@ namespace FPS.Systems
 			if (input.isFired)
 			{
 				System.Random rng = new System.Random(input.tick);
-				Vector2 totalKick = new Vector2(profile.PitchKick, (float)(rng.NextDouble() * 2.0 - 1.0) * profile.YawKick);
+				Vector2 totalKick = new Vector2((float)(rng.NextDouble() * 2.0 - 1.0) * profile.YawKick, profile.PitchKick);
 				
-				state.pitchKickVelocity += totalKick.x * profile.PermanentRatio;
-				state.recoilVelocity += new Vector2(totalKick.x * profile.RecoverableRatio, totalKick.y);
+				state.pitchKickVelocity += totalKick.y * profile.PermanentRatio;
+				state.recoilVelocity += new Vector2(totalKick.x, totalKick.y * profile.RecoverableRatio);
 			}
 
 			// recoil damping

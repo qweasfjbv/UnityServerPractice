@@ -91,8 +91,9 @@ namespace FPS.Controller
 		[SerializeField] private float jumpForce;
 
 		[Header("----------View Params----------")]
-		[SerializeField] private float mouseSensitivity = 10f;
-		[SerializeField] private float viewPitchLimit = 70f;
+		[SerializeField] private float mouseSensitivity;
+		[SerializeField] private float viewPitchLimit;
+		[SerializeField] private float rotationSpeed;
 
 		[Header("----------Animation Params----------")]
 		[SerializeField] private float footOffset;
@@ -111,6 +112,9 @@ namespace FPS.Controller
 		private WeaponState[] weaponBuffer = new WeaponState[Constants.BUFFER_SIZE];
 
 		private int currentTick = 0;
+		private Vector2 targetLookDir = Vector2.zero;
+		private Vector2 currentLookDir = Vector2.zero;
+
 		private float timer = 0f;
 
 		private void Awake()
@@ -300,19 +304,20 @@ namespace FPS.Controller
 			transform.position = state.position;
 		}
 
-		private float currentYaw = 0f;
-		private float currentPitch = 18f;
 		private void ApplyView(in PlayerInput input, in WeaponState weaponState)
 		{
-			float mouseX = Input.GetAxis("Mouse X");
-			float mouseY = Input.GetAxis("Mouse Y");
+			Vector2 mouseDelta = Managers.Input.IA.Player.Look.ReadValue<Vector2>();
 
-			currentYaw += mouseX * mouseSensitivity;
-			currentPitch -= mouseY * mouseSensitivity;
+			targetLookDir.x += mouseDelta.x * mouseSensitivity;
+			targetLookDir.y -= mouseDelta.y * mouseSensitivity;
 
-			currentPitch = Mathf.Clamp(currentPitch - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
-			float finalPitch = currentPitch - weaponState.recoilState.recoilOffset.x;
-			transform.rotation = Quaternion.Euler(0f, currentYaw + weaponState.recoilState.recoilOffset.y, 0f); 
+			targetLookDir.y = Mathf.Clamp(targetLookDir.y - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
+			currentLookDir.y = Mathf.Clamp(currentLookDir.y - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
+
+			currentLookDir = Vector2.Lerp(currentLookDir, targetLookDir, rotationSpeed * Constants.TICK_DT);
+
+			float finalPitch = currentLookDir.y - weaponState.recoilState.recoilOffset.y;
+			transform.rotation = Quaternion.Euler(0f, currentLookDir.x + weaponState.recoilState.recoilOffset.x, 0f); 
 			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
 		}
 
@@ -322,7 +327,7 @@ namespace FPS.Controller
 			animParams.input = input.move.sqrMagnitude;
 			animParams.speed.x = state.velocity.x / maxRunSpeed;
 			animParams.speed.y = state.velocity.z / maxRunSpeed;
-			animParams.pitch = -Mathf.Clamp(currentPitch - weaponState.recoilState.recoilOffset.x, -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
+			animParams.pitch = -Mathf.Clamp(currentLookDir.y - weaponState.recoilState.recoilOffset.x, -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
 			animParams.isAim = true;
 
 			animator.SetFloat("input", animParams.input);
