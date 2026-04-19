@@ -1,14 +1,33 @@
 ﻿using FPS.Controller;
 using FPS.SO;
 using FPS.Utils;
+using FPS.Weapons;
 using UnityEngine;
 
 namespace FPS.Systems
 {
+	public struct CameraContext
+	{
+		public Vector3 camPosition;
+		public Vector3 camForward;
+		public float range;
+	}
+
+	public struct FireResult 
+	{
+		public bool isFired;
+		public int tick;
+
+		public Vector3 origin;
+		public Vector3 direction;
+	}
+
 	public struct WeaponState
 	{
 		public RecoilState recoilState;
 		public int lastFiredTick;
+		public int ammo;
+		public bool isFiredThisTick;
 	}
 
 	public struct RecoilState
@@ -21,32 +40,46 @@ namespace FPS.Systems
 	public static class WeaponSystem
 	{
 		public static WeaponState SimulateWeapon(
-			WeaponState state, 
-			PlayerInput input, 
-			GunSpec spec,
-			float dt)
+			GunBase currentWeapon,
+			WeaponState state,
+			PlayerInput input,
+			CameraContext cameraCtx,
+			out FireResult fireResult)
 		{
-			int tickBetweenShots = Mathf.RoundToInt(Constants.TICK_RATE / spec.FireRate);
+			fireResult = default;
+
+			int tickBetweenShots = Mathf.RoundToInt(Constants.TICK_RATE / currentWeapon.Spec.FireRate);
 
 			bool canFire = input.isFired
-				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots;
-
+				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots
+				&& state.ammo > 0;
 
 			var adjustedInput = input;
 			adjustedInput.isFired = canFire;
 
 			if (canFire)
-				state.lastFiredTick = input.tick;
+			{
+				fireResult = new FireResult
+				{
+					isFired = true,
+					origin = currentWeapon.MuzzlePos,
+					direction = CalculateWeaponDir(currentWeapon.MuzzlePos, cameraCtx),
+					tick = input.tick
+				};
 
-			state.recoilState = SimulateRecoil(state.recoilState, adjustedInput, spec.RecoilProfile, dt);
+				state.ammo--;
+				state.lastFiredTick = input.tick;
+			}
+
+			state.isFiredThisTick = canFire;
+			state.recoilState = SimulateRecoil(state.recoilState, adjustedInput, currentWeapon.Spec.RecoilProfile);
 			return state;
 		}
 
 		public static RecoilState SimulateRecoil(
 			RecoilState state,
 			PlayerInput input,
-			RecoilProfile profile,
-			float dt
+			RecoilProfile profile
 			)
 		{
 			if (input.isFired)
@@ -59,14 +92,31 @@ namespace FPS.Systems
 			}
 
 			// recoil damping
-			state.pitchKickVelocity = Mathf.Lerp(state.pitchKickVelocity, 0, profile.Damping * dt);
-			state.recoilVelocity = Vector2.Lerp(state.recoilVelocity, Vector2.zero, profile.Damping * dt);
-			state.recoilOffset += state.recoilVelocity * dt;
+			state.pitchKickVelocity = Mathf.Lerp(state.pitchKickVelocity, 0, profile.Damping * Constants.TICK_DT);
+			state.recoilVelocity = Vector2.Lerp(state.recoilVelocity, Vector2.zero, profile.Damping * Constants.TICK_DT);
+			state.recoilOffset += state.recoilVelocity * Constants.TICK_DT;
 
 			// recovery
-			state.pitchKickVelocity = Mathf.Lerp(state.pitchKickVelocity, 0f, profile.Recovery * dt);
-			state.recoilOffset = Vector2.Lerp(state.recoilOffset, Vector2.zero, profile.Recovery * dt);
+			state.pitchKickVelocity = Mathf.Lerp(state.pitchKickVelocity, 0f, profile.Recovery * Constants.TICK_DT);
+			state.recoilOffset = Vector2.Lerp(state.recoilOffset, Vector2.zero, profile.Recovery * Constants.TICK_DT);
 			return state;
+		}
+
+		public static Vector3 CalculateWeaponDir(Vector3 position, CameraContext cameraCtx)
+		{
+			Ray camRay = new Ray(cameraCtx.camPosition, cameraCtx.camForward);
+			Vector3 targetPoint;
+
+			if (Physics.Raycast(camRay, out RaycastHit hit, cameraCtx.range))
+			{
+				targetPoint = hit.point;
+			}
+			else
+			{
+				targetPoint = camRay.GetPoint(cameraCtx.range);
+			}
+
+			return (targetPoint - position).normalized;
 		}
 	}
 }

@@ -32,8 +32,17 @@ namespace FPS.Controller
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 			stateBuffer[index] = curPlayerState;
 
-			curWeaponState = WeaponSystem.SimulateWeapon(curWeaponState, input, currentWeapon.Spec, Constants.TICK_DT);
+			curWeaponState = WeaponSystem.SimulateWeapon(currentWeapon, curWeaponState, input, 
+				new CameraContext
+				{
+					camPosition = targetCamera.position,
+					camForward = targetCamera.forward,
+					range = 60
+				}
+				, out FireResult fireResult);
 			weaponBuffer[index] = curWeaponState;
+
+			HandleTestFireFX(fireResult);
 
 			ApplyState(curPlayerState);
 			ApplyView(input, curWeaponState);
@@ -95,6 +104,25 @@ namespace FPS.Controller
 				rewind.velocity,
 				SMOOTH_RATE
 			);
+		}
+
+		private void HandleTestFireFX(in FireResult result)
+		{
+			if (!result.isFired) return;
+
+			Ray ray = new Ray(result.origin, result.direction);
+			Vector3 targetPoint;
+
+			if (Physics.Raycast(ray, out RaycastHit hit, 60/*HACK*/))
+			{
+				targetPoint = hit.point;
+			}
+			else
+			{
+				targetPoint = ray.GetPoint(60);
+			}
+
+			Instantiate(testPrefab, targetPoint, Quaternion.identity);
 		}
 	}
 }

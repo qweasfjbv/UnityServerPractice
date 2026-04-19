@@ -100,6 +100,7 @@ namespace FPS.Controller
 
 		[Header("----------Debug----------")]
 		[SerializeField, ReadOnly] private GunBase currentWeapon = null;
+		[SerializeField] private GameObject testPrefab;
 
 		private bool isReady = false;
 		private PlayerControllerType controllerType = PlayerControllerType.None;
@@ -134,6 +135,9 @@ namespace FPS.Controller
 				controllerType = PlayerControllerType.Client;
 				client.OnGetSnapshotAction += OnGetSnapshot;
 			}
+
+			// HACK
+			curWeaponState.ammo = currentWeapon.Spec.MagazineSize;
 		}
 
 		private void Update()

@@ -15,7 +15,7 @@ MonoBehaviour:
   damage: 10
   fireRate: 7
   reloadTime: 2
-  magazineSize: 100
+  magazineSize: 30
   maxAmmo: 179
   recoilPrefile:
     damping: 5
