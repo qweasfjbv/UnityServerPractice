@@ -68,7 +68,6 @@ namespace FPS.Manager.Server
 			}
 
 			PacketType type = (PacketType)packet.data[0];
-			Debug.Log(packet.sender.ToString() + " : " + type.ToString());
 
 			switch (type)
 			{

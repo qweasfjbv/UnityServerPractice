@@ -13,21 +13,28 @@ namespace FPS.Systems
 		public float range;
 	}
 
-	public struct FireResult 
+	public struct FireResult
 	{
-		public bool isFired;
-		public int tick;
-
 		public Vector3 origin;
 		public Vector3 direction;
+
+		public bool isFired;
+		public int tick;
 	}
 
 	public struct WeaponState
 	{
 		public RecoilState recoilState;
+		public int lastFiredTick;			// Reconcile
+		public int reserveAmmo;				// Reconcile
+		public int ammoInMagazine;			// Reconcile
+	}
+
+	public struct NetworkWeaponState
+	{
 		public int lastFiredTick;
-		public int ammo;
-		public bool isFiredThisTick;
+		public int reserveAmmo; 
+		public int ammoInMagazine;         
 	}
 
 	public struct RecoilState
@@ -39,6 +46,29 @@ namespace FPS.Systems
 
 	public static class WeaponSystem
 	{
+		public static NetworkWeaponState SimulateWeaponSimple(
+			GunBase currentWeapon,
+			NetworkWeaponState state,
+			PlayerInput input)
+		{
+			int tickBetweenShots = Mathf.RoundToInt(Constants.TICK_RATE / currentWeapon.Spec.FireRate);
+
+			bool canFire = input.isFired
+				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots
+				&& state.ammoInMagazine > 0;
+
+			var adjustedInput = input;
+			adjustedInput.isFired = canFire;
+
+			if (canFire)
+			{
+				state.ammoInMagazine--;
+				state.lastFiredTick = input.tick;
+			}
+
+			return state;
+		}
+
 		public static WeaponState SimulateWeapon(
 			GunBase currentWeapon,
 			WeaponState state,
@@ -52,7 +82,7 @@ namespace FPS.Systems
 
 			bool canFire = input.isFired
 				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots
-				&& state.ammo > 0;
+				&& state.ammoInMagazine > 0;
 
 			var adjustedInput = input;
 			adjustedInput.isFired = canFire;
@@ -67,11 +97,10 @@ namespace FPS.Systems
 					tick = input.tick
 				};
 
-				state.ammo--;
+				state.ammoInMagazine--;
 				state.lastFiredTick = input.tick;
 			}
 
-			state.isFiredThisTick = canFire;
 			state.recoilState = SimulateRecoil(state.recoilState, adjustedInput, currentWeapon.Spec.RecoilProfile);
 			return state;
 		}

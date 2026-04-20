@@ -4,6 +4,7 @@ using FPS.Systems;
 using FPS.Utils;
 using FPS.Weapons;
 using System.Runtime.InteropServices;
+using TMPro;
 using Unity.Collections;
 using UnityEngine;
 
@@ -31,9 +32,10 @@ namespace FPS.Controller
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct PlayerState
 	{
-		public int tick;
+		public NetworkWeaponState weaponState;
 		public Vector3 position;
 		public Vector3 velocity;
+		public int tick;
 		public bool isGrounded;
 	}
 
@@ -101,6 +103,7 @@ namespace FPS.Controller
 		[Header("----------Debug----------")]
 		[SerializeField, ReadOnly] private GunBase currentWeapon = null;
 		[SerializeField] private GameObject testPrefab;
+		[SerializeField] private TextMeshProUGUI ammoTMP;
 
 		private bool isReady = false;
 		private PlayerControllerType controllerType = PlayerControllerType.None;
@@ -113,7 +116,6 @@ namespace FPS.Controller
 		private WeaponState[] weaponBuffer = new WeaponState[Constants.BUFFER_SIZE];
 
 		private int currentTick = 0;
-		private Vector2 targetLookDir = Vector2.zero;
 		private Vector2 currentLookDir = Vector2.zero;
 
 		private float timer = 0f;
@@ -137,7 +139,7 @@ namespace FPS.Controller
 			}
 
 			// HACK
-			curWeaponState.ammo = currentWeapon.Spec.MagazineSize;
+			curWeaponState.ammoInMagazine = currentWeapon.Spec.MagazineSize;
 		}
 
 		private void Update()
@@ -156,6 +158,8 @@ namespace FPS.Controller
 					Debug.LogError("Wrong Controller Type");
 					break;
 			}
+
+			ammoTMP.text = $"{curWeaponState.ammoInMagazine} / {curWeaponState.reserveAmmo}";
 		}
 
 		private void OnAnimatorIK(int layerIndex)
@@ -188,9 +192,7 @@ namespace FPS.Controller
 			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
 			input.isFired = Managers.Input.IA.Player.Fire.IsPressed();
 
-			Vector3 dir = targetCamera.forward;
-			input.lookDir.x = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-			input.lookDir.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+			input.lookDir = currentLookDir;
 
 			return input;
 		}
@@ -199,8 +201,10 @@ namespace FPS.Controller
 		{
 			state.isGrounded = CheckGround(state, out _);
 
+			Vector2 lookDir = new Vector2(Mathf.Atan2(targetCamera.forward.x, targetCamera.forward.z) * Mathf.Rad2Deg, -Mathf.Asin(targetCamera.forward.y) * Mathf.Rad2Deg);
+
 			// Accel/Friction
-			Vector3 wishDir = Quaternion.Euler(0f, input.lookDir.x, 0f) * new Vector3(input.move.x, 0, input.move.y);
+			Vector3 wishDir = Quaternion.Euler(0f, lookDir.x, 0f) * new Vector3(input.move.x, 0, input.move.y);
 			float accel = state.isGrounded ? walkAccel : airAccel;
 			float friction = state.isGrounded ? groundFriction : airFriction;
 
@@ -308,22 +312,7 @@ namespace FPS.Controller
 			transform.position = state.position;
 		}
 
-		private void ApplyView(in PlayerInput input, in WeaponState weaponState)
-		{
-			Vector2 mouseDelta = Managers.Input.IA.Player.Look.ReadValue<Vector2>();
 
-			targetLookDir.x += mouseDelta.x * mouseSensitivity;
-			targetLookDir.y -= mouseDelta.y * mouseSensitivity;
-
-			targetLookDir.y = Mathf.Clamp(targetLookDir.y - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
-			currentLookDir.y = Mathf.Clamp(currentLookDir.y - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
-
-			currentLookDir = Vector2.Lerp(currentLookDir, targetLookDir, rotationSpeed * Constants.TICK_DT);
-
-			float finalPitch = currentLookDir.y - weaponState.recoilState.recoilOffset.y;
-			transform.rotation = Quaternion.Euler(0f, currentLookDir.x + weaponState.recoilState.recoilOffset.x, 0f); 
-			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
-		}
 
 		private void ApplyAnimParams(in PlayerInput input, in PlayerState state, in WeaponState weaponState
 			, out PlayerAnimParams animParams)

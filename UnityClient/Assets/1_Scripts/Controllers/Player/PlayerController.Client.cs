@@ -1,3 +1,4 @@
+using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
 using FPS.Utils;
@@ -27,9 +28,10 @@ namespace FPS.Controller
 
 			int index = tick % Constants.BUFFER_SIZE;
 
-			inputBuffer[index] = input;
-
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
+
+			curPlayerState.tick = input.tick;
+			inputBuffer[index] = input;
 			stateBuffer[index] = curPlayerState;
 
 			curWeaponState = WeaponSystem.SimulateWeapon(currentWeapon, curWeaponState, input, 
@@ -45,26 +47,43 @@ namespace FPS.Controller
 			HandleTestFireFX(fireResult);
 
 			ApplyState(curPlayerState);
-			ApplyView(input, curWeaponState);
+			ApplyClientView(input, curWeaponState);
 			ApplyAnimParams(input, curPlayerState, curWeaponState, out PlayerAnimParams animParams);
 
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_AnimParam, animParams));
 		}
 
+		private void ApplyClientView(in PlayerInput input, in WeaponState weaponState)
+		{
+			Vector2 mouseDelta = Managers.Input.IA.Player.Look.ReadValue<Vector2>();
+
+			currentLookDir.x += mouseDelta.x * mouseSensitivity;
+			currentLookDir.y -= mouseDelta.y * mouseSensitivity;
+
+			currentLookDir.y = Mathf.Clamp(currentLookDir.y - weaponState.recoilState.pitchKickVelocity * Constants.TICK_DT, -viewPitchLimit, viewPitchLimit);
+
+			float finalPitch = currentLookDir.y - weaponState.recoilState.recoilOffset.y;
+			transform.rotation = Quaternion.Euler(0f, currentLookDir.x + weaponState.recoilState.recoilOffset.x, 0f);
+			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
+		}
+
 		private void OnGetSnapshot(PlayerState state)
 		{
 			PlayerState simulateState = state;
+			NetworkWeaponState weaponState = state.weaponState;
 
 			int tick = (state.tick + 1) % Constants.BUFFER_SIZE;
 
 			while (tick != (currentTick + 1) % Constants.BUFFER_SIZE)
 			{
 				simulateState = Simulate(simulateState, inputBuffer[tick], Constants.TICK_DT);
+				weaponState = WeaponSystem.SimulateWeaponSimple(currentWeapon, weaponState, inputBuffer[tick]);
 				tick = (tick + 1) % Constants.BUFFER_SIZE;
 			}
 
 			Reconcile(simulateState);
+			ReconcileWeapon(weaponState);
 			ApplyState(curPlayerState);
 			stateBuffer[currentTick] = curPlayerState;
 		}
@@ -106,6 +125,13 @@ namespace FPS.Controller
 			);
 		}
 
+		private void ReconcileWeapon(NetworkWeaponState weaponState)
+		{
+			curWeaponState.ammoInMagazine = weaponState.ammoInMagazine;
+			curWeaponState.reserveAmmo = weaponState.reserveAmmo;
+			curWeaponState.lastFiredTick = weaponState.lastFiredTick;
+		}
+
 		private void HandleTestFireFX(in FireResult result)
 		{
 			if (!result.isFired) return;
@@ -122,6 +148,10 @@ namespace FPS.Controller
 				targetPoint = ray.GetPoint(60);
 			}
 
+			// HACK - TEST
+			Debug.Log("DEBUG : " + transform.position + ", " + transform.rotation);
+			Debug.Log("target : " + targetCamera.position + ", " + targetCamera.forward);
+			Debug.Log(result.tick + " : TARGET POINT : " + targetPoint);
 			Instantiate(testPrefab, targetPoint, Quaternion.identity);
 		}
 	}
