@@ -69,7 +69,7 @@ namespace FPS.Controller
 			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
 		}
 
-		private void OnGetSnapshot(PlayerState state)
+		public void OnGetSnapshot(PlayerState state)
 		{
 			PlayerState simulateState = state;
 			NetworkWeaponState weaponState = state.weaponState;
@@ -131,7 +131,6 @@ namespace FPS.Controller
 			curWeaponState.ammoInMagazine = weaponState.ammoInMagazine;
 			curWeaponState.reserveAmmo = weaponState.reserveAmmo;
 			curWeaponState.lastFiredTick = weaponState.lastFiredTick;
-			Debug.Log("LOAD TICK : " + curWeaponState.reloadEndTick + ", " + weaponState.reloadEndTick + ", " + "\n" + curWeaponState.isReloading + ", " + weaponState.isReloading);
 			curWeaponState.reloadEndTick = weaponState.reloadEndTick;
 			curWeaponState.isReloading = weaponState.isReloading;
 

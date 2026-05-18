@@ -41,6 +41,16 @@ namespace FPS.Controller
 	}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct NetworkPlayerState
+	{
+		public int localId;
+		public Vector3 position;
+		public Vector3 velocity;
+		public int tick;
+		public bool isGrounded;
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct PlayerAnimParams
 	{
 		public Vector2 speed;
@@ -121,6 +131,11 @@ namespace FPS.Controller
 
 		private float timer = 0f;
 
+		private void SetAsOtherPlayer()
+		{
+			controllerType = PlayerControllerType.Other;
+		}
+
 		private void Awake()
 		{
 			animator = GetComponent<Animator>();
@@ -136,7 +151,6 @@ namespace FPS.Controller
 			if (ServerManagers.Dedi is DediClientManager client)
 			{
 				controllerType = PlayerControllerType.Client;
-				client.OnGetSnapshotAction += OnGetSnapshot;
 			}
 
 			// HACK
@@ -155,6 +169,7 @@ namespace FPS.Controller
 					ClientPlayerUpdate();
 					break;
 				case PlayerControllerType.Other:
+					OtherPlayerUpdate();
 					break;
 				default:
 					Debug.LogError("Wrong Controller Type");

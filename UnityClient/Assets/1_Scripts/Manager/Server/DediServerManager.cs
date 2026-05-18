@@ -1,9 +1,9 @@
 ﻿using FPS.Controller;
+using FPS.Manager.Game;
 using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FPS.Manager.Server
@@ -26,7 +26,7 @@ namespace FPS.Manager.Server
 		public PlayerState serverState;
 
 		// Security
-		public bool isConnected;
+		public bool isConnected = true;
 	}
 
 	/// <summary>
@@ -55,6 +55,34 @@ namespace FPS.Manager.Server
 		public override void OnUpdate()
 		{
 			base.OnUpdate();
+
+			foreach (var senderPair in clients)
+			{
+				ClientConnection sender = senderPair.Value;
+
+				if (!sender.isConnected)
+					continue;
+
+				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
+				if (playerObject == null) continue;
+				byte[] payload = Serializer.Serialize(
+					PacketType.S2C_StateUpdate,
+					playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.localId)
+				);
+
+				foreach (var receiverPair in clients)
+				{
+					ClientConnection receiver = receiverPair.Value;
+
+					if (!receiver.isConnected)
+						continue;
+
+					if (receiver.localId == sender.localId)
+						continue;
+
+					Send(receiver.endPoint, payload);
+				}
+			}
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
@@ -70,6 +98,8 @@ namespace FPS.Manager.Server
 					isConnected = true,
 				};
 				clients.TryAdd(packet.sender, client);
+
+				Send(packet.sender, Serializer.Serialize<int>(PacketType.Init, client.localId));
 			}
 
 			PacketType type = (PacketType)packet.data[0];
@@ -89,7 +119,7 @@ namespace FPS.Manager.Server
 				case PacketType.C2S_Input:
 					{
 						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
-						OnGetInputAction.Invoke(packet.sender, input);
+						OnGetInputAction?.Invoke(packet.sender, input);
 					}
 					break;
 				case PacketType.Spawn:

@@ -40,9 +40,23 @@ namespace FPS.Manager.Game
 			playerObjects.Add(id, Instantiate(playerPrefab, Vector3.zero, Quaternion.identity));
 		}
 
+		public GameObject GetPlayerObject(int id)
+		{
+			if (!playerObjects.ContainsKey(id)) return null;
+			return playerObjects[id];
+		}
+
 		public void UpdatePlayerState(int id, PlayerState state)
 		{
+			if (!playerObjects.TryGetValue(id, out GameObject playerObject)) return;
 
+			playerObject.GetComponent<PlayerController>().OnGetSnapshot(state);
+		}
+		public void UpdatePlayerState(NetworkPlayerState state)
+		{
+			if(!playerObjects.TryGetValue(state.localId, out GameObject playerObject)) return;
+
+			playerObject.GetComponent<PlayerController>().UpdateState(state);
 		}
 
 		public void UpdatePlayerState(int id, PlayerAnimParams animParams)

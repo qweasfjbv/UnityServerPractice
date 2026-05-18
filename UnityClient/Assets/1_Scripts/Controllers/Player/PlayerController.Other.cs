@@ -9,12 +9,28 @@ namespace FPS.Controller
 		{
 			timer += Time.deltaTime;
 
-			while(timer >= Constants.TICK_DT)
+			while (timer >= Constants.TICK_DT)
 			{
-				Tick();
 				timer -= Constants.TICK_DT;
 			}
 		}
-		
+
+
+		public NetworkPlayerState GetNetworkPlayerState(int localId)
+		{
+			NetworkPlayerState state;
+			state.localId = localId;
+			state.position = curPlayerState.position;
+			state.velocity = curPlayerState.velocity;
+			state.tick = curPlayerState.tick;
+			state.isGrounded = curPlayerState.isGrounded;
+
+			return state;
+		}
+
+		public void UpdateState(NetworkPlayerState state)
+		{
+			state.position = curPlayerState.position;
+		}
 	}
 }
