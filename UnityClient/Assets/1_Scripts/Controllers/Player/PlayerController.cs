@@ -161,7 +161,7 @@ namespace FPS.Controller
 					break;
 			}
 
-			ammoTMP.text = $"{curWeaponState.ammoInMagazine} / {curWeaponState.reserveAmmo}";
+			// ammoTMP.text = $"{curWeaponState.ammoInMagazine} / {curWeaponState.reserveAmmo}";
 		}
 
 		private void OnAnimatorIK(int layerIndex)

@@ -41,6 +41,7 @@ namespace FPS.Manager.Server
 				}
 			}).Start();
 
+			Send(serverEP, Serializer.Serialize(PacketType.Spawn));
 			Debug.Log("DediClient Init");
 		}
 
