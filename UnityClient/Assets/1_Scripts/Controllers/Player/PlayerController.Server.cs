@@ -33,7 +33,23 @@ namespace FPS.Controller
 				, out FireResult fireResult);
 			weaponBuffer[inputTick] = curWeaponState;
 
-			HandleTestFireFX(fireResult);
+			if (fireResult.isFired)
+			{
+				if (GameManagerEx.Instance.LagCompensationRaycast(
+					input.tick,
+					fireResult.origin,
+					fireResult.direction,
+					60f,
+					localId,
+					out RaycastHit hit))
+				{
+					var target = hit.collider.GetComponentInParent<PlayerController>();
+					if (target != null)
+					{
+						Debug.Log($"{localId} Hit: {target.name}");
+					}
+				}
+			}
 
 			ApplyState(curPlayerState);
 			ApplyServerView(input);
@@ -54,7 +70,6 @@ namespace FPS.Controller
 
 			state.localId = localId;
 			state.lookDir = inputBuffer[(curPlayerState.tick - 1).ToIndex()].lookDir;
-			Debug.Log(localId + "LOOK DIR : " + state.lookDir);
 
 			state.playerState.weaponState = curWeaponState.ToNetworkState();
 			state.playerState.position = curPlayerState.position;
@@ -63,6 +78,14 @@ namespace FPS.Controller
 			state.playerState.isGrounded = curPlayerState.isGrounded;
 
 			return state;
+		}
+
+		public bool TryGetHistoricalState(int tick, out PlayerState state)
+		{
+			int index = tick.ToIndex();
+			state = stateBuffer[index];
+
+			return state.tick == tick;
 		}
 	}
 }

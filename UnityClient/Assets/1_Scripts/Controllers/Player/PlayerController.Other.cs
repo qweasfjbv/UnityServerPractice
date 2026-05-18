@@ -1,8 +1,5 @@
-﻿using FPS.Systems;
-using FPS.Utils;
+﻿using FPS.Utils;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
-using UnityEngine.Windows;
 
 namespace FPS.Controller
 {

@@ -2,6 +2,7 @@ using FPS.Controller;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace FPS.Manager.Game
 {
@@ -93,5 +94,48 @@ namespace FPS.Manager.Game
 		{
 
 		}
-    }
+
+		public bool LagCompensationRaycast(
+			int rewindTick,
+			Vector3 origin,
+			Vector3 direction,
+			float distance,
+			int shooterLocalId,
+			out RaycastHit hit)
+		{
+			// Current State Backup
+			Dictionary<int, Vector3> backupPositions = new();
+
+			// Rewind
+			foreach (var kv in playerObjects)
+			{
+				if (kv.Key == shooterLocalId)
+					continue;
+
+				if (kv.Value.GetComponent<PlayerController>()
+					.TryGetHistoricalState(rewindTick, out PlayerState pastState))
+				{
+					backupPositions[kv.Key] = kv.Value.transform.position;
+					kv.Value.transform.position = pastState.position;
+				}
+			}
+
+			// Judge
+			bool result = Physics.Raycast(
+				origin,
+				direction,
+				out hit,
+				distance,
+				LayerMask.GetMask("Player", "Default"),
+				QueryTriggerInteraction.Ignore);
+
+			// Restore
+			foreach (var kv in backupPositions)
+			{
+				playerObjects[kv.Key].transform.position = kv.Value;
+			}
+
+			return result;
+		}
+	}
 }
