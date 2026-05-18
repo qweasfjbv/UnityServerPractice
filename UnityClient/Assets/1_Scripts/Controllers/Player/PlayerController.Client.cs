@@ -51,6 +51,7 @@ namespace FPS.Controller
 			ApplyClientView(input, curWeaponState);
 			ApplyAnimParams(input, curPlayerState, curWeaponState);
 
+			Debug.Log("INPUT DIR :" + input.lookDir);
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
 		}
 

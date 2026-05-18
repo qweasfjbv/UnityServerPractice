@@ -6,7 +6,7 @@ namespace FPS.Utils
 	{
 		public static int ToIndex(this int tick)
 		{
-			return tick % Constants.BUFFER_SIZE;
+			return (tick + Constants.BUFFER_SIZE) % Constants.BUFFER_SIZE;
 		}
 
 		public static NetworkWeaponState ToNetworkState(this WeaponState state)

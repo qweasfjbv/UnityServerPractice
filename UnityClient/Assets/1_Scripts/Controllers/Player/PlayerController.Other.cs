@@ -22,17 +22,12 @@ namespace FPS.Controller
 		public void UpdateState(NetworkPlayerState state)
 		{
 			transform.position = state.playerState.position;
-
-			if (state.lookDir.sqrMagnitude > 0.0001f)
-			{
-				float angle = Mathf.Atan2(state.lookDir.y, state.lookDir.x) * Mathf.Rad2Deg;
-				transform.rotation = Quaternion.Euler(0f, 0f, angle);
-			}
+			transform.rotation = Quaternion.Euler(0f, state.lookDir.x, 0f);
 
 			PlayerAnimParams animParams;
 			animParams.speed.x = state.playerState.velocity.x / maxRunSpeed;
 			animParams.speed.y = state.playerState.velocity.z / maxRunSpeed;
-			animParams.pitch = -Mathf.Clamp(currentLookDir.y , -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
+			animParams.pitch = -Mathf.Clamp(state.lookDir.y , -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
 			animParams.isAim = true;
 
 			animator.SetFloat("input", state.playerState.velocity.sqrMagnitude);

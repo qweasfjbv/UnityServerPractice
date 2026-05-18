@@ -53,7 +53,8 @@ namespace FPS.Controller
 			NetworkPlayerState state;
 
 			state.localId = localId;
-			state.lookDir = inputBuffer[currentTick.ToIndex()].lookDir;
+			state.lookDir = inputBuffer[(curPlayerState.tick - 1).ToIndex()].lookDir;
+			Debug.Log(localId + "LOOK DIR : " + state.lookDir);
 
 			state.playerState.weaponState = curWeaponState.ToNetworkState();
 			state.playerState.position = curPlayerState.position;
