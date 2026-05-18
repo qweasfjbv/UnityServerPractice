@@ -20,7 +20,6 @@ namespace FPS.Manager.Server
 	public class DediClientManager : UDPNetworkTransport
 	{
 		private IPEndPoint serverEP;
-		private int localId = -1;
 
 		public Action<PlayerState> OnGetSnapshotAction { get; set; }
 
@@ -63,7 +62,7 @@ namespace FPS.Manager.Server
 				case PacketType.S2C_Snapshot:
 					{
 						PlayerState snapshot = Serializer.Deserialize<PlayerState>(out _, packet.data);
-						GameManagerEx.Instance.UpdatePlayerState(localId, snapshot);
+						GameManagerEx.Instance.UpdatePlayerState(snapshot);
 					}
 					break;
 				case PacketType.S2C_StateUpdate:
@@ -80,7 +79,7 @@ namespace FPS.Manager.Server
 					break;
 				case PacketType.Init:
 					{
-						this.localId = Serializer.Deserialize<int>(out _, packet.data);
+						GameManagerEx.Instance.LocalId = Serializer.Deserialize<int>(out _, packet.data);
 					}
 					break;
 			}

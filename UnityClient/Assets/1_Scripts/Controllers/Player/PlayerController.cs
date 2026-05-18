@@ -131,7 +131,7 @@ namespace FPS.Controller
 
 		private float timer = 0f;
 
-		private void SetAsOtherPlayer()
+		public void SetAsOtherPlayer()
 		{
 			controllerType = PlayerControllerType.Other;
 		}

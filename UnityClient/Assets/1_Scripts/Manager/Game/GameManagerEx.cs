@@ -17,6 +17,9 @@ namespace FPS.Manager.Game
 		public static GameManagerEx Instance => instance;
 		private static GameManagerEx instance = null;
 
+		private int localId = -1;
+		public int LocalId { get => localId; set => localId = value; }
+
 		void Awake()
 		{
 			if (null == instance)
@@ -37,7 +40,10 @@ namespace FPS.Manager.Game
 		public void SpawnPlayerObject(int id)
 		{
 			if (playerObjects.ContainsKey(id)) return;
-			playerObjects.Add(id, Instantiate(playerPrefab, Vector3.zero, Quaternion.identity));
+
+			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
+			playerObjects.Add(id, playerObject);
 		}
 
 		public GameObject GetPlayerObject(int id)
@@ -46,9 +52,9 @@ namespace FPS.Manager.Game
 			return playerObjects[id];
 		}
 
-		public void UpdatePlayerState(int id, PlayerState state)
+		public void UpdatePlayerState(PlayerState state)
 		{
-			if (!playerObjects.TryGetValue(id, out GameObject playerObject)) return;
+			if (!playerObjects.TryGetValue(localId, out GameObject playerObject)) return;
 
 			playerObject.GetComponent<PlayerController>().OnGetSnapshot(state);
 		}
