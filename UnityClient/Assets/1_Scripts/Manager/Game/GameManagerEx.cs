@@ -1,6 +1,4 @@
-using Cysharp.Threading.Tasks.Triggers;
 using FPS.Controller;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

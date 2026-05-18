@@ -43,11 +43,9 @@ namespace FPS.Controller
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct NetworkPlayerState
 	{
+		public PlayerState playerState;
+		public Vector2 lookDir;
 		public int localId;
-		public Vector3 position;
-		public Vector3 velocity;
-		public int tick;
-		public bool isGrounded;
 	}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -335,9 +333,9 @@ namespace FPS.Controller
 
 
 
-		private void ApplyAnimParams(in PlayerInput input, in PlayerState state, in WeaponState weaponState
-			, out PlayerAnimParams animParams)
+		private void ApplyAnimParams(in PlayerInput input, in PlayerState state, in WeaponState weaponState)
 		{
+			PlayerAnimParams animParams;
 			animParams.input = input.move.sqrMagnitude;
 			animParams.speed.x = state.velocity.x / maxRunSpeed;
 			animParams.speed.y = state.velocity.z / maxRunSpeed;

@@ -51,12 +51,15 @@ namespace FPS.Controller
 		public NetworkPlayerState GetNetworkPlayerState(int localId)
 		{
 			NetworkPlayerState state;
-			Debug.Log(localId + " : " + "CURPLAYER POS : " + curPlayerState.position);
+
 			state.localId = localId;
-			state.position = curPlayerState.position;
-			state.velocity = curPlayerState.velocity;
-			state.tick = curPlayerState.tick;
-			state.isGrounded = curPlayerState.isGrounded;
+			state.lookDir = inputBuffer[currentTick.ToIndex()].lookDir;
+
+			state.playerState.weaponState = curWeaponState.ToNetworkState();
+			state.playerState.position = curPlayerState.position;
+			state.playerState.velocity = curPlayerState.velocity;
+			state.playerState.tick = curPlayerState.tick;
+			state.playerState.isGrounded = curPlayerState.isGrounded;
 
 			return state;
 		}

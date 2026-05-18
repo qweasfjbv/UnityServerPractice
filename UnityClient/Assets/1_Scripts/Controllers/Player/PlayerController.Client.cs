@@ -49,10 +49,9 @@ namespace FPS.Controller
 
 			ApplyState(curPlayerState);
 			ApplyClientView(input, curWeaponState);
-			ApplyAnimParams(input, curPlayerState, curWeaponState, out PlayerAnimParams animParams);
+			ApplyAnimParams(input, curPlayerState, curWeaponState);
 
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
-			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_AnimParam, animParams));
 		}
 
 		private void ApplyClientView(in PlayerInput input, in WeaponState weaponState)
