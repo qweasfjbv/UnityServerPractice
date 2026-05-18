@@ -1,3 +1,4 @@
+using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
 using FPS.Utils;
@@ -14,8 +15,10 @@ namespace FPS.Controller
 		}
 
 		// TODO - Process Edge Case
-		private void OnGetInput(IPEndPoint clientEP, PlayerInput input)
+		public void OnGetInput(int localId, PlayerInput input)
 		{
+			if (GameManagerEx.Instance.LocalId != localId) return;
+
 			int inputTick = input.tick.ToIndex();
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 
@@ -39,7 +42,7 @@ namespace FPS.Controller
 			ApplyServerView(input);
 
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
-			ServerManagers.Dedi.Send(clientEP, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
+			ServerManagers.Dedi.Send(localId, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
 		}
 
 		private void ApplyServerView(in PlayerInput input)

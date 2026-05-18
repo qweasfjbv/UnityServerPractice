@@ -79,7 +79,6 @@ namespace FPS.Manager.Game
 		}
 		public void UpdatePlayerState(NetworkPlayerState state)
 		{
-			Debug.Log("!!!");
 			if(!playerObjects.TryGetValue(state.localId, out GameObject playerObject)) return;
 
 			playerObject.GetComponent<PlayerController>().UpdateState(state);

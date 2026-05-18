@@ -52,6 +52,8 @@ namespace FPS.Manager.Server
 			udp.Send(payload, payload.Length, destEP);
 		}
 
+		public virtual void Send(int localId, byte[] payload) { }
+
 		protected abstract void HandlePacket(in UdpPacket packet);
 
 		protected void ReceiveLoop()

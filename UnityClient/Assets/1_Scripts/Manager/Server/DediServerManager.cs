@@ -3,6 +3,8 @@ using FPS.Manager.Game;
 using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using UnityEngine;
 
@@ -43,7 +45,7 @@ namespace FPS.Manager.Server
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
 		public int id = 1;
-		public Action<IPEndPoint, PlayerInput> OnGetInputAction { get; set; }
+		public Action<int, PlayerInput> OnGetInputAction { get; set; }
 
 		public override void Init()
 		{
@@ -61,9 +63,7 @@ namespace FPS.Manager.Server
 				ClientConnection sender = senderPair.Value;
 
 				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
-				Debug.Log("1");
 				if (playerObject == null) continue;
-				Debug.Log("2");
 
 				byte[] payload = Serializer.Serialize(
 					PacketType.S2C_StateUpdate,
@@ -119,7 +119,7 @@ namespace FPS.Manager.Server
 				case PacketType.C2S_Input:
 					{
 						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
-						OnGetInputAction?.Invoke(packet.sender, input);
+						OnGetInputAction?.Invoke(client.localId, input);
 					}
 					break;
 				case PacketType.Spawn:
@@ -156,6 +156,16 @@ namespace FPS.Manager.Server
 		{
 			if (destEP == null) return;
 			base.Send(destEP, payload);
+		}
+
+		public override void Send(int localId, byte[] payload)
+		{
+			IPEndPoint? endPoint = clients
+				.FirstOrDefault(kvp => kvp.Value.localId == id)
+				.Key;
+
+			if (endPoint == null) return;
+			Send(endPoint, payload);
 		}
 	}
 }
