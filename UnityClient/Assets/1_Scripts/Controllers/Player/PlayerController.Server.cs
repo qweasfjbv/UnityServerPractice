@@ -2,7 +2,6 @@ using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
 using FPS.Utils;
-using System.Net;
 using UnityEngine;
 
 namespace FPS.Controller

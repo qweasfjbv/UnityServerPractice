@@ -54,34 +54,17 @@ namespace FPS.Manager.Server
 			Debug.Log("DediServer Init");
 		}
 
+		private float timer = 0f;
 		public override void OnUpdate()
 		{
 			base.OnUpdate();
 
-			foreach (var senderPair in clients)
+			timer += Time.deltaTime;
+
+			while (timer >= Constants.TICK_DT)
 			{
-				ClientConnection sender = senderPair.Value;
-
-				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
-				if (playerObject == null) continue;
-
-				byte[] payload = Serializer.Serialize(
-					PacketType.S2C_StateUpdate,
-					playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.localId)
-				);
-
-				foreach (var receiverPair in clients)
-				{
-					ClientConnection receiver = receiverPair.Value;
-
-					if (!receiver.isConnected)
-						continue;
-
-					if (receiver.localId == sender.localId)
-						continue;
-
-					Send(receiver.endPoint, payload);
-				}
+				BroadcastTransform();
+				timer -= Constants.TICK_DT;
 			}
 		}
 
@@ -149,6 +132,35 @@ namespace FPS.Manager.Server
 						}
 					}
 					break;
+			}
+		}
+
+		private void BroadcastTransform()
+		{
+			foreach (var senderPair in clients)
+			{
+				ClientConnection sender = senderPair.Value;
+
+				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
+				if (playerObject == null) continue;
+
+				byte[] payload = Serializer.Serialize(
+					PacketType.S2C_StateUpdate,
+					playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.localId)
+				);
+
+				foreach (var receiverPair in clients)
+				{
+					ClientConnection receiver = receiverPair.Value;
+
+					if (!receiver.isConnected)
+						continue;
+
+					if (receiver.localId == sender.localId)
+						continue;
+
+					Send(receiver.endPoint, payload);
+				}
 			}
 		}
 

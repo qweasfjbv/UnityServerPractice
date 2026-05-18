@@ -30,6 +30,7 @@ namespace FPS.Controller
 
 		public void UpdateState(NetworkPlayerState state)
 		{
+			Debug.Log("UPDATE! : " + state.position);
 			transform.position = state.position;
 		}
 	}
