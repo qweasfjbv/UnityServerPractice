@@ -117,6 +117,7 @@ namespace FPS.Controller
 		[SerializeField] private TextMeshProUGUI ammoTMP;
 
 		private bool isReady = false;
+		[SerializeField]
 		private PlayerControllerType controllerType = PlayerControllerType.None;
 
 		private PlayerState curPlayerState = default;

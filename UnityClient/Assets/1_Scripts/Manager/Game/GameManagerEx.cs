@@ -1,4 +1,7 @@
+using Cysharp.Threading.Tasks.Triggers;
 using FPS.Controller;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,6 +44,14 @@ namespace FPS.Manager.Game
 		{
 			if (playerObjects.ContainsKey(id)) return;
 
+			StartCoroutine(WaitForInit(id));
+		}
+
+		private IEnumerator WaitForInit(int id)
+		{
+			yield return new WaitUntil(() => localId != -1);
+
+			Debug.Log(localId + ", " + id);
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
 			playerObjects.Add(id, playerObject);
