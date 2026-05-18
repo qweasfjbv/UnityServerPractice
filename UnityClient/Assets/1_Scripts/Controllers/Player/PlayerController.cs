@@ -117,7 +117,6 @@ namespace FPS.Controller
 		[SerializeField] private TextMeshProUGUI ammoTMP;
 
 		private bool isReady = false;
-		[SerializeField]
 		private PlayerControllerType controllerType = PlayerControllerType.None;
 
 		private PlayerState curPlayerState = default;
@@ -135,6 +134,7 @@ namespace FPS.Controller
 		public void SetAsOtherPlayer()
 		{
 			controllerType = PlayerControllerType.Other;
+			targetCamera.gameObject.SetActive(false);
 		}
 
 		private void Awake()

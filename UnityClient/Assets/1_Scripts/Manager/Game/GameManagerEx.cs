@@ -40,6 +40,15 @@ namespace FPS.Manager.Game
 
 		private Dictionary<int, GameObject> playerObjects = new();
 
+		public void SpawnPlayerObjectOnServer(int id)
+		{
+			if (playerObjects.ContainsKey(id)) return;
+
+			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
+			playerObjects.Add(id, playerObject);
+		}
+
 		public void SpawnPlayerObject(int id)
 		{
 			if (playerObjects.ContainsKey(id)) return;
@@ -51,7 +60,6 @@ namespace FPS.Manager.Game
 		{
 			yield return new WaitUntil(() => localId != -1);
 
-			Debug.Log(localId + ", " + id);
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
 			playerObjects.Add(id, playerObject);
@@ -71,6 +79,7 @@ namespace FPS.Manager.Game
 		}
 		public void UpdatePlayerState(NetworkPlayerState state)
 		{
+			Debug.Log("!!!");
 			if(!playerObjects.TryGetValue(state.localId, out GameObject playerObject)) return;
 
 			playerObject.GetComponent<PlayerController>().UpdateState(state);

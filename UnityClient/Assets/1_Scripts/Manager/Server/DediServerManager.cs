@@ -60,11 +60,11 @@ namespace FPS.Manager.Server
 			{
 				ClientConnection sender = senderPair.Value;
 
-				if (!sender.isConnected)
-					continue;
-
 				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
+				Debug.Log("1");
 				if (playerObject == null) continue;
+				Debug.Log("2");
+
 				byte[] payload = Serializer.Serialize(
 					PacketType.S2C_StateUpdate,
 					playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.localId)
@@ -126,6 +126,7 @@ namespace FPS.Manager.Server
 					{
 						int newPlayerId = client.localId;
 						byte[] spawnPacket = Serializer.Serialize(PacketType.Spawn, newPlayerId);
+						GameManagerEx.Instance.SpawnPlayerObjectOnServer(newPlayerId);
 
 						foreach (var kv in clients)
 						{
