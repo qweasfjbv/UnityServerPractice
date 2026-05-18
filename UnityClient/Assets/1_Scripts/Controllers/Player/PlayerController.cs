@@ -146,7 +146,6 @@ namespace FPS.Controller
 			if (ServerManagers.Dedi is DediServerManager server)
 			{
 				controllerType = PlayerControllerType.Server;
-				server.OnGetInputAction += OnGetInput;
 			}
 
 			if (ServerManagers.Dedi is DediClientManager client)

@@ -71,6 +71,13 @@ namespace FPS.Manager.Game
 			return playerObjects[id];
 		}
 
+		public void OnGetPlayerInput(int localId, PlayerInput input)
+		{
+			if (!playerObjects.TryGetValue(localId, out GameObject playerObject)) return;
+
+			playerObject.GetComponent<PlayerController>().OnGetInput(localId, input);
+		}
+
 		public void UpdatePlayerState(PlayerState state)
 		{
 			if (!playerObjects.TryGetValue(localId, out GameObject playerObject)) return;

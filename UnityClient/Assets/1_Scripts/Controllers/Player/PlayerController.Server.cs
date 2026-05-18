@@ -16,8 +16,6 @@ namespace FPS.Controller
 		// TODO - Process Edge Case
 		public void OnGetInput(int localId, PlayerInput input)
 		{
-			if (GameManagerEx.Instance.LocalId != localId) return;
-
 			int inputTick = input.tick.ToIndex();
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 
@@ -48,6 +46,19 @@ namespace FPS.Controller
 		{
 			transform.rotation = Quaternion.Euler(0f, input.lookDir.x, 0f);
 			cameraBoom.localRotation = Quaternion.Euler(input.lookDir.y, 0f, 0f);
+		}
+
+		public NetworkPlayerState GetNetworkPlayerState(int localId)
+		{
+			NetworkPlayerState state;
+			Debug.Log(localId + " : " + "CURPLAYER POS : " + curPlayerState.position);
+			state.localId = localId;
+			state.position = curPlayerState.position;
+			state.velocity = curPlayerState.velocity;
+			state.tick = curPlayerState.tick;
+			state.isGrounded = curPlayerState.isGrounded;
+
+			return state;
 		}
 	}
 }

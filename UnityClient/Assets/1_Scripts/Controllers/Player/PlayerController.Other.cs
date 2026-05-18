@@ -15,19 +15,6 @@ namespace FPS.Controller
 			}
 		}
 
-
-		public NetworkPlayerState GetNetworkPlayerState(int localId)
-		{
-			NetworkPlayerState state;
-			state.localId = localId;
-			state.position = curPlayerState.position;
-			state.velocity = curPlayerState.velocity;
-			state.tick = curPlayerState.tick;
-			state.isGrounded = curPlayerState.isGrounded;
-
-			return state;
-		}
-
 		public void UpdateState(NetworkPlayerState state)
 		{
 			Debug.Log("UPDATE! : " + state.position);

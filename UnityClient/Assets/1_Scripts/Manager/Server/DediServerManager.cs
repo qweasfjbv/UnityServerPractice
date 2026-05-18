@@ -45,7 +45,6 @@ namespace FPS.Manager.Server
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
 		public int id = 1;
-		public Action<int, PlayerInput> OnGetInputAction { get; set; }
 
 		public override void Init()
 		{
@@ -102,7 +101,7 @@ namespace FPS.Manager.Server
 				case PacketType.C2S_Input:
 					{
 						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
-						OnGetInputAction?.Invoke(client.localId, input);
+						GameManagerEx.Instance.OnGetPlayerInput(client.localId, input);
 					}
 					break;
 				case PacketType.Spawn:
