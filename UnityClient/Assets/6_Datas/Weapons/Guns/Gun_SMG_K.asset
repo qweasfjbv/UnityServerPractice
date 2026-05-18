@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 10
   fireRate: 7
-  reloadTime: 2
-  magazineSize: 100
-  maxAmmo: 179
+  reloadTick: 90
+  magazineSize: 30
+  maxAmmo: 180
   recoilPrefile:
     damping: 5
     recovery: 10

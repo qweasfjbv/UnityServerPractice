@@ -3,6 +3,7 @@ using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FPS.Manager.Server
@@ -10,6 +11,8 @@ namespace FPS.Manager.Server
 	public class ClientConnection
 	{
 		public IPEndPoint endPoint;
+
+		public int localId;
 
 		// Network
 		public long lastRecvTick;
@@ -39,6 +42,7 @@ namespace FPS.Manager.Server
 	{
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
+		public int id = 1;
 		public Action<IPEndPoint, PlayerInput> OnGetInputAction { get; set; }
 
 		public override void Init()
@@ -62,7 +66,8 @@ namespace FPS.Manager.Server
 				client = new ClientConnection
 				{
 					endPoint = packet.sender,
-					isConnected = true
+					localId = id++,
+					isConnected = true,
 				};
 				clients.TryAdd(packet.sender, client);
 			}
@@ -85,6 +90,32 @@ namespace FPS.Manager.Server
 					{
 						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
 						OnGetInputAction.Invoke(packet.sender, input);
+					}
+					break;
+				case PacketType.Spawn:
+					{
+						int newPlayerId = client.localId;
+						byte[] spawnPacket = Serializer.Serialize(PacketType.Spawn, newPlayerId);
+
+						foreach (var kv in clients)
+						{
+							Send(kv.Key, spawnPacket);
+						}
+
+						foreach (var kv in clients)
+						{
+							ClientConnection other = kv.Value;
+
+							if (other.localId == newPlayerId)
+								continue;
+
+							byte[] existingPlayerSpawnPacket = Serializer.Serialize(
+								PacketType.Spawn,
+								other.localId
+							);
+
+							Send(client.endPoint, existingPlayerSpawnPacket);
+						}
 					}
 					break;
 			}

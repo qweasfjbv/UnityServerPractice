@@ -23,6 +23,7 @@ namespace FPS.Controller
 		public bool isJump;
 		public bool isCrouch;
 		public bool isFired;
+		public bool isReload;
 	}
 
 	/// <summary>
@@ -140,6 +141,7 @@ namespace FPS.Controller
 
 			// HACK
 			curWeaponState.ammoInMagazine = currentWeapon.Spec.MagazineSize;
+			curWeaponState.reserveAmmo = currentWeapon.Spec.MaxAmmo;
 		}
 
 		private void Update()
@@ -174,9 +176,12 @@ namespace FPS.Controller
 			animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1f);
 			animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1f);
 
-			animator.SetIKPosition(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.position);
-			animator.SetIKRotation(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.rotation);
-
+			if (!curPlayerState.weaponState.isReloading)
+			{
+				animator.SetIKPosition(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.position);
+				animator.SetIKRotation(AvatarIKGoal.LeftHand, currentWeapon.LeftHandTarget.rotation);
+			}
+			
 			animator.SetIKPosition(AvatarIKGoal.RightHand, currentWeapon.RightHandTarget.position);
 			animator.SetIKRotation(AvatarIKGoal.RightHand, currentWeapon.RightHandTarget.rotation);
 		}
@@ -191,6 +196,7 @@ namespace FPS.Controller
 			input.isJump = Managers.Input.IA.Player.Jump.IsPressed();
 			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
 			input.isFired = Managers.Input.IA.Player.Fire.IsPressed();
+			input.isReload = Managers.Input.IA.Player.Reload.IsPressed();
 
 			input.lookDir = currentLookDir;
 
@@ -331,15 +337,13 @@ namespace FPS.Controller
 
 			animator.SetFloat("pitch", animParams.pitch);
 
-			if (weaponState.lastFiredTick == input.tick)
-			{
-				animator.SetTrigger("isShoot");
-			}
+			if (weaponState.lastFiredTick == input.tick) animator.SetTrigger("isShoot");
+			if (!weaponBuffer[(currentTick-1).ToIndex()].isReloading && weaponState.isReloading) animator.SetTrigger("isReload");
 		}
 
 		private int IncreaseTick()
 		{
-			currentTick = (currentTick + 1) % Constants.BUFFER_SIZE;
+			currentTick = (currentTick + 1);
 			return currentTick;
 		}
 	}

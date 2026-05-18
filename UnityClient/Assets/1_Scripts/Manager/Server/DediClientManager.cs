@@ -1,4 +1,5 @@
 ﻿using FPS.Controller;
+using FPS.Manager.Game;
 using FPS.Utils;
 using System;
 using System.Net;
@@ -19,6 +20,7 @@ namespace FPS.Manager.Server
 	public class DediClientManager : UDPNetworkTransport
 	{
 		private IPEndPoint serverEP;
+		private GameObject localPlayerObject = null;
 
 		public Action<PlayerState> OnGetSnapshotAction { get; set; }
 
@@ -54,13 +56,19 @@ namespace FPS.Manager.Server
 			{
 				case PacketType.S2C_Pong:
 					{
-						Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
+						// Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
 					}
 					break;
 				case PacketType.S2C_Snapshot:
 					{
 						PlayerState snapshot = Serializer.Deserialize<PlayerState>(out _, packet.data);
 						OnGetSnapshotAction.Invoke(snapshot);
+					}
+					break;
+				case PacketType.Spawn:
+					{
+						int localId = Serializer.Deserialize<int>(packet.data);
+						GameManagerEx.Instance.SpawnPlayerObject(localId);
 					}
 					break;
 			}

@@ -43,7 +43,8 @@ namespace FPS.Manager.Server
 			dedi.Init();
 		}
 
-		private void Update()
+		// fix: Update can cause input passing err
+		private void LateUpdate()
 		{
 			dedi.OnUpdate();
 		}

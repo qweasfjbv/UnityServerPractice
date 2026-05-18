@@ -16,11 +16,12 @@ namespace FPS.Controller
 		// TODO - Process Edge Case
 		private void OnGetInput(IPEndPoint clientEP, PlayerInput input)
 		{
+			int inputTick = input.tick.ToIndex();
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 
 			curPlayerState.tick = input.tick;
-			inputBuffer[input.tick] = input;
-			stateBuffer[input.tick] = curPlayerState;
+			inputBuffer[inputTick] = input;
+			stateBuffer[inputTick] = curPlayerState;
 
 			curWeaponState = WeaponSystem.SimulateWeapon(currentWeapon, curWeaponState, input,
 				new CameraContext
@@ -30,17 +31,14 @@ namespace FPS.Controller
 					range = 60 
 				}
 				, out FireResult fireResult);
-			weaponBuffer[input.tick] = curWeaponState;
+			weaponBuffer[inputTick] = curWeaponState;
 
 			HandleTestFireFX(fireResult);
 
 			ApplyState(curPlayerState);
 			ApplyServerView(input);
 
-			curPlayerState.weaponState.ammoInMagazine = curWeaponState.ammoInMagazine;
-			curPlayerState.weaponState.reserveAmmo = curWeaponState.reserveAmmo;
-			curPlayerState.weaponState.lastFiredTick = curWeaponState.lastFiredTick;
-
+			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 			ServerManagers.Dedi.Send(clientEP, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
 		}
 

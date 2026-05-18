@@ -17,11 +17,13 @@ namespace FPS.Weapons
 		[SerializeField] private GunSpec spec;
 		[SerializeField] private Transform rightHandTarget;
 		[SerializeField] private Transform leftHandTarget;
+		[SerializeField] private Transform magazineTarget;
 		[SerializeField] private Transform muzzlePosition;
 		
 		public GunSpec Spec => spec;
 		public Transform LeftHandTarget => leftHandTarget;
 		public Transform RightHandTarget => rightHandTarget;
+		public Transform MagazineTarget => magazineTarget;
 		public Vector3 MuzzlePos => muzzlePosition.position;
 
     }

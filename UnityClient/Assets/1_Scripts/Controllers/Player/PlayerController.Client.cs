@@ -26,7 +26,7 @@ namespace FPS.Controller
 			PlayerInput input = GetInput(tick);
 			input.tick = tick;
 
-			int index = tick % Constants.BUFFER_SIZE;
+			int index = tick.ToIndex();
 
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 
@@ -42,6 +42,7 @@ namespace FPS.Controller
 					range = 60
 				}
 				, out FireResult fireResult);
+			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 			weaponBuffer[index] = curWeaponState;
 
 			HandleTestFireFX(fireResult);
@@ -73,19 +74,19 @@ namespace FPS.Controller
 			PlayerState simulateState = state;
 			NetworkWeaponState weaponState = state.weaponState;
 
-			int tick = (state.tick + 1) % Constants.BUFFER_SIZE;
+			int tick = state.tick + 1;
 
-			while (tick != (currentTick + 1) % Constants.BUFFER_SIZE)
+			while (tick <= currentTick + 1)
 			{
-				simulateState = Simulate(simulateState, inputBuffer[tick], Constants.TICK_DT);
-				weaponState = WeaponSystem.SimulateWeaponSimple(currentWeapon, weaponState, inputBuffer[tick]);
-				tick = (tick + 1) % Constants.BUFFER_SIZE;
+				simulateState = Simulate(simulateState, inputBuffer[tick.ToIndex()], Constants.TICK_DT);
+				weaponState = WeaponSystem.SimulateWeaponSimple(currentWeapon, weaponState, inputBuffer[tick.ToIndex()]);
+				tick++;
 			}
 
 			Reconcile(simulateState);
 			ReconcileWeapon(weaponState);
 			ApplyState(curPlayerState);
-			stateBuffer[currentTick] = curPlayerState;
+			stateBuffer[currentTick.ToIndex()] = curPlayerState;
 		}
 
 		// Hybrid Reconciliation
@@ -130,6 +131,11 @@ namespace FPS.Controller
 			curWeaponState.ammoInMagazine = weaponState.ammoInMagazine;
 			curWeaponState.reserveAmmo = weaponState.reserveAmmo;
 			curWeaponState.lastFiredTick = weaponState.lastFiredTick;
+			Debug.Log("LOAD TICK : " + curWeaponState.reloadEndTick + ", " + weaponState.reloadEndTick + ", " + "\n" + curWeaponState.isReloading + ", " + weaponState.isReloading);
+			curWeaponState.reloadEndTick = weaponState.reloadEndTick;
+			curWeaponState.isReloading = weaponState.isReloading;
+
+			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 		}
 
 		private void HandleTestFireFX(in FireResult result)
@@ -148,10 +154,6 @@ namespace FPS.Controller
 				targetPoint = ray.GetPoint(60);
 			}
 
-			// HACK - TEST
-			Debug.Log("DEBUG : " + transform.position + ", " + transform.rotation);
-			Debug.Log("target : " + targetCamera.position + ", " + targetCamera.forward);
-			Debug.Log(result.tick + " : TARGET POINT : " + targetPoint);
 			Instantiate(testPrefab, targetPoint, Quaternion.identity);
 		}
 	}

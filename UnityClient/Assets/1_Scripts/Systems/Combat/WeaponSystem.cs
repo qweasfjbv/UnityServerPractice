@@ -27,14 +27,18 @@ namespace FPS.Systems
 		public RecoilState recoilState;
 		public int lastFiredTick;			// Reconcile
 		public int reserveAmmo;				// Reconcile
-		public int ammoInMagazine;			// Reconcile
+		public int ammoInMagazine;          // Reconcile
+		public int reloadEndTick;			// Reconcile
+		public bool isReloading;			// Reconcile
 	}
 
 	public struct NetworkWeaponState
 	{
 		public int lastFiredTick;
 		public int reserveAmmo; 
-		public int ammoInMagazine;         
+		public int ammoInMagazine;
+		public int reloadEndTick;         
+		public bool isReloading;                 
 	}
 
 	public struct RecoilState
@@ -52,13 +56,32 @@ namespace FPS.Systems
 			PlayerInput input)
 		{
 			int tickBetweenShots = Mathf.RoundToInt(Constants.TICK_RATE / currentWeapon.Spec.FireRate);
+			
+			/* Reload */
+			bool canReload = input.isReload
+				&& state.ammoInMagazine < currentWeapon.Spec.MagazineSize
+				&& state.reserveAmmo > 0
+				&& !state.isReloading;
+
+			if (canReload)
+			{
+				state.reloadEndTick = input.tick + currentWeapon.Spec.ReloadTick;
+				state.isReloading = true;
+			}
+
+			if (state.isReloading && input.tick > state.reloadEndTick)
+			{
+				int reloadAmount = Mathf.Min(currentWeapon.Spec.MagazineSize - state.ammoInMagazine, state.reserveAmmo);
+				state.ammoInMagazine += reloadAmount;
+				state.reserveAmmo -= reloadAmount;
+
+				state.isReloading = false;
+			}
 
 			bool canFire = input.isFired
-				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots
-				&& state.ammoInMagazine > 0;
-
-			var adjustedInput = input;
-			adjustedInput.isFired = canFire;
+				&& (input.tick - state.lastFiredTick) >= tickBetweenShots
+				&& state.ammoInMagazine > 0
+				&& !state.isReloading;
 
 			if (canFire)
 			{
@@ -80,15 +103,40 @@ namespace FPS.Systems
 
 			int tickBetweenShots = Mathf.RoundToInt(Constants.TICK_RATE / currentWeapon.Spec.FireRate);
 
+			/* Reload */
+			bool canReload = input.isReload
+				&& state.ammoInMagazine < currentWeapon.Spec.MagazineSize
+				&& state.reserveAmmo > 0
+				&& !state.isReloading;
+
+            if (canReload)
+			{
+				state.reloadEndTick = input.tick + currentWeapon.Spec.ReloadTick;
+				state.isReloading = true;
+			}
+
+            if (state.isReloading && input.tick > state.reloadEndTick)
+			{
+				int reloadAmount = Mathf.Min(currentWeapon.Spec.MagazineSize - state.ammoInMagazine, state.reserveAmmo);
+				state.ammoInMagazine += reloadAmount;
+				state.reserveAmmo -= reloadAmount;
+
+				state.isReloading = false;
+			}
+
+			/* Fire */
 			bool canFire = input.isFired
-				&& ((input.tick < state.lastFiredTick ? input.tick + Constants.BUFFER_SIZE : input.tick) - state.lastFiredTick) >= tickBetweenShots
-				&& state.ammoInMagazine > 0;
+				&& (input.tick - state.lastFiredTick) >= tickBetweenShots
+				&& state.ammoInMagazine > 0
+				&& !state.isReloading;
 
 			var adjustedInput = input;
 			adjustedInput.isFired = canFire;
 
 			if (canFire)
 			{
+				Debug.Log(input.tick + ", " + state.isReloading + ", " + state.reloadEndTick);
+
 				fireResult = new FireResult
 				{
 					isFired = true,
