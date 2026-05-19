@@ -18,7 +18,7 @@ namespace FPS.Controller
 		// TODO - Process Edge Case
 		public void OnGetInput(int localId, PlayerInput input)
 		{
-			input.tick = (ServerManagers.Dedi as DediServerManager).serverTick;
+			input.tick = (ServerManagers.Dedi as DediServerManager).ServerTick;
 
 			int inputTick = input.tick.ToIndex();
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
@@ -40,7 +40,7 @@ namespace FPS.Controller
 			if (fireResult.isFired)
 			{
 				if (GameManagerEx.Instance.LagCompensationRaycast(
-					input.tick,
+					input.recentlyReceivedTick,
 					fireResult.origin,
 					input.muzzleDir,
 					60f,

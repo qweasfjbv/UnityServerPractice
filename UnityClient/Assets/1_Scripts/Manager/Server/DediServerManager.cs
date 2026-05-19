@@ -43,7 +43,9 @@ namespace FPS.Manager.Server
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
 		public int id = 1;
-		public int serverTick = 0;
+
+		private int serverTick = 0;
+		public int ServerTick => serverTick;
 
 		public override void Init()
 		{
@@ -106,9 +108,12 @@ namespace FPS.Manager.Server
 					break;
 				case PacketType.Spawn:
 					{
-						int newPlayerId = client.localId;
-						byte[] spawnPacket = Serializer.Serialize(PacketType.Spawn, newPlayerId);
-						GameManagerEx.Instance.SpawnPlayerObjectOnServer(newPlayerId);
+						SpawnData spawndata;
+						spawndata.startTick = serverTick;
+						spawndata.localId = client.localId;
+
+						byte[] spawnPacket = Serializer.Serialize<SpawnData>(PacketType.Spawn, spawndata);
+						GameManagerEx.Instance.SpawnPlayerObjectOnServer(spawndata);
 
 						foreach (var kv in clients)
 						{
@@ -119,7 +124,7 @@ namespace FPS.Manager.Server
 						{
 							ClientConnection other = kv.Value;
 
-							if (other.localId == newPlayerId)
+							if (other.localId == spawndata.localId)
 								continue;
 
 							byte[] existingPlayerSpawnPacket = Serializer.Serialize(

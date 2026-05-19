@@ -3,6 +3,7 @@ using FPS.SO;
 using FPS.Utils;
 using FPS.Weapons;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static UnityEngine.UI.GridLayoutGroup;
 
 namespace FPS.Systems
@@ -204,7 +205,10 @@ namespace FPS.Systems
 
 				if (hitPlayer == controller)
 					continue;
-
+				else
+				{
+					Debug.Log("Player Hit!");
+				}
 				return (hit.point - position).normalized;
 			}
 

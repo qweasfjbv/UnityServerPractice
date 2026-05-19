@@ -18,6 +18,9 @@ namespace FPS.Manager.Game
 		public static GameManagerEx Instance => instance;
 		private static GameManagerEx instance = null;
 
+		private int recentlyReceivedTick = 0;
+		public int RecentlyReceivedTick => recentlyReceivedTick;
+
 		private int localId = -1;
 		public int LocalId { get => localId; set => localId = value; }
 
@@ -38,29 +41,29 @@ namespace FPS.Manager.Game
 
 		private Dictionary<int, GameObject> playerObjects = new();
 
-		public void SpawnPlayerObjectOnServer(int id)
+		public void SpawnPlayerObjectOnServer(in SpawnData data)
 		{
-			if (playerObjects.ContainsKey(id)) return;
+			if (playerObjects.ContainsKey(data.localId)) return;
 
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-			playerObject.name = $"Player {id}";
-			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
-			playerObjects.Add(id, playerObject);
+			playerObject.name = $"Player {data.localId}";
+			playerObjects.Add(data.localId, playerObject);
 		}
 
-		public void SpawnPlayerObject(int id)
+		public void SpawnPlayerObject(in SpawnData data)
 		{
-			if (playerObjects.ContainsKey(id)) return;
+			if (playerObjects.ContainsKey(data.localId)) return;
 
-			StartCoroutine(WaitForInit(id));
+			StartCoroutine(WaitForInit(data.localId, data.startTick));
 		}
 
-		private IEnumerator WaitForInit(int id)
+		private IEnumerator WaitForInit(int id, int startTick)
 		{
 			yield return new WaitUntil(() => localId != -1);
 
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
+			else playerObject.GetComponent<PlayerController>().SetAsClientPlayer(startTick);
 			playerObjects.Add(id, playerObject);
 		}
 
@@ -87,6 +90,7 @@ namespace FPS.Manager.Game
 		{
 			if(!playerObjects.TryGetValue(state.localId, out GameObject playerObject)) return;
 
+			recentlyReceivedTick = state.playerState.tick;
 			playerObject.GetComponent<PlayerController>().UpdateState(state);
 		}
 

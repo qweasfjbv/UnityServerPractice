@@ -73,8 +73,8 @@ namespace FPS.Manager.Server
 					break;
 				case PacketType.Spawn:
 					{
-						int localId = Serializer.Deserialize<int>(out _, packet.data);
-						GameManagerEx.Instance.SpawnPlayerObject(localId);
+						SpawnData data = Serializer.Deserialize<SpawnData>(out _, packet.data);
+						GameManagerEx.Instance.SpawnPlayerObject(data);
 					}
 					break;
 				case PacketType.Init:

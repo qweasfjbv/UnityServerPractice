@@ -21,6 +21,7 @@ namespace FPS.Controller
 		public Vector2 move;
 		public Vector2 lookDir;
 		public int tick;
+		public int recentlyReceivedTick;
 		public bool isJump;
 		public bool isCrouch;
 		public bool isFired;
@@ -56,6 +57,13 @@ namespace FPS.Controller
 		public float input;
 		public float pitch;
 		public bool isAim;
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct SpawnData
+	{
+		public int localId;
+		public int startTick;
 	}
 
 	public enum PlayerControllerType
@@ -136,6 +144,12 @@ namespace FPS.Controller
 			targetCamera.gameObject.SetActive(false);
 		}
 
+		// Server Tick Synchronization
+		public void SetAsClientPlayer(int startTick)
+		{
+			currentTick = startTick;
+		}
+
 		private void Awake()
 		{
 			animator = GetComponent<Animator>();
@@ -206,6 +220,7 @@ namespace FPS.Controller
 			PlayerInput input;
 
 			input.tick = tick;
+			input.recentlyReceivedTick = GameManagerEx.Instance.RecentlyReceivedTick;
 			input.move = Managers.Input.IA.Player.Move.ReadValue<Vector2>();
 			input.isJump = Managers.Input.IA.Player.Jump.IsPressed();
 			input.isCrouch = Managers.Input.IA.Player.Crouch.IsPressed();
