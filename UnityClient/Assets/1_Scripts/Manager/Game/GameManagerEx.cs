@@ -121,8 +121,13 @@ namespace FPS.Manager.Game
 				{
 					backupPositions[kv.Key] = kv.Value.transform.position;
 					kv.Value.transform.position = pastState.position;
+
+					Debug.Log("REWINEDED : " + pastState.position);
 				}
 			}
+
+			Debug.Log("Shoot Info : " + origin + ", " + direction);
+			Physics.SyncTransforms();
 
 			RaycastHit[] hits = Physics.RaycastAll(
 				origin,
@@ -137,7 +142,7 @@ namespace FPS.Manager.Game
 			{
 				playerObjects[kv.Key].transform.position = kv.Value;
 			}
-
+			Physics.SyncTransforms();
 
 			System.Array.Sort(hits, (a, b) =>
 			a.distance.CompareTo(b.distance));

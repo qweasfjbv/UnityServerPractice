@@ -18,6 +18,7 @@ namespace FPS.Controller
 	public struct PlayerInput
 	{
 		public Vector3 muzzleDir;
+		public Vector3 muzzlePos;
 		public Vector2 move;
 		public Vector2 lookDir;
 		public int tick;
@@ -229,6 +230,7 @@ namespace FPS.Controller
 
 			input.lookDir = currentLookDir;
 			input.muzzleDir = Vector3.zero;
+			input.muzzlePos = Vector3.zero;
 
 			return input;
 		}

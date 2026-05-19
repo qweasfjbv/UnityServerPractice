@@ -1,10 +1,12 @@
-﻿using FPS.Controller;
+﻿using Cysharp.Threading.Tasks.Triggers;
+using FPS.Controller;
 using FPS.SO;
 using FPS.Utils;
 using FPS.Weapons;
 using UnityEngine;
 using UnityEngine.Rendering;
 using static UnityEngine.UI.GridLayoutGroup;
+using static UnityEngine.UI.Image;
 
 namespace FPS.Systems
 {
@@ -138,8 +140,6 @@ namespace FPS.Systems
 
 			if (canFire)
 			{
-				Debug.Log(input.tick + ", " + state.isReloading + ", " + state.reloadEndTick);
-
 				fireResult = new FireResult
 				{
 					isFired = true,
@@ -147,9 +147,6 @@ namespace FPS.Systems
 					direction = CalculateWeaponDir(controller, currentWeapon.MuzzlePos, cameraCtx),
 					tick = input.tick
 				};
-
-				Debug.Log("Dir : " + input.lookDir);
-
 				state.ammoInMagazine--;
 				state.lastFiredTick = input.tick;
 			}
@@ -205,10 +202,7 @@ namespace FPS.Systems
 
 				if (hitPlayer == controller)
 					continue;
-				else
-				{
-					Debug.Log("Player Hit!");
-				}
+
 				return (hit.point - position).normalized;
 			}
 

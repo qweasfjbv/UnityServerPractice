@@ -45,6 +45,7 @@ namespace FPS.Controller
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 			weaponBuffer[index] = curWeaponState;
 
+			input.muzzlePos = fireResult.origin;
 			input.muzzleDir = fireResult.direction;
 
 			HandleTestFireFX(fireResult);
@@ -138,24 +139,38 @@ namespace FPS.Controller
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 		}
 
+		// HACK - for Test
 		private void HandleTestFireFX(in FireResult result)
 		{
-			return;
 			if (!result.isFired) return;
 
-			Ray ray = new Ray(result.origin, result.direction);
-			Vector3 targetPoint;
+			RaycastHit[] hits = Physics.RaycastAll(
+							result.origin,
+							result.direction,
+							60f,
+							LayerMask.GetMask("Player", "Wall"),
+							QueryTriggerInteraction.Collide
+							);
 
-			if (Physics.Raycast(ray, out RaycastHit hit, 60/*HACK*/))
+			System.Array.Sort(hits, (a, b) =>
+			a.distance.CompareTo(b.distance));
+
+			RaycastHit hit;
+			foreach (var h in hits)
 			{
-				targetPoint = hit.point;
-			}
-			else
-			{
-				targetPoint = ray.GetPoint(60);
+				var target =
+					h.collider.GetComponentInParent<PlayerController>();
+
+				if (target == null)
+					continue;
+
+				if (target.gameObject == this.gameObject)
+					continue;
+
+				Debug.Log("Client Hit! : " + target.transform.position + ", " + result.origin + ", " + result.direction);
+				hit = h;
 			}
 
-			Instantiate(testPrefab, targetPoint, Quaternion.identity);
 		}
 	}
 }
