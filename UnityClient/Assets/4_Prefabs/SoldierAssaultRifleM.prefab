@@ -1112,7 +1112,8 @@ GameObject:
   - component: {fileID: 6956932625630708752}
   - component: {fileID: 3381125494476145505}
   - component: {fileID: 1772997417201700614}
-  m_Layer: 0
+  - component: {fileID: 7344854258755020464}
+  m_Layer: 8
   m_Name: SoldierAssaultRifleM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1195,6 +1196,29 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!136 &7344854258755020464
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3463683423959335945}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3369159
+  m_Height: 1.9203064
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9082233, z: 0.03}
 --- !u!1 &3583168215910724821
 GameObject:
   m_ObjectHideFlags: 0

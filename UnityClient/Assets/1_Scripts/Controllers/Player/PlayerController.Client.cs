@@ -45,13 +45,14 @@ namespace FPS.Controller
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 			weaponBuffer[index] = curWeaponState;
 
+			input.muzzleDir = fireResult.direction;
+
 			HandleTestFireFX(fireResult);
 
 			ApplyState(curPlayerState);
 			ApplyClientView(input, curWeaponState);
 			ApplyAnimParams(input, curPlayerState, curWeaponState);
 
-			Debug.Log("INPUT DIR :" + input.lookDir);
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
 		}
 
@@ -139,6 +140,7 @@ namespace FPS.Controller
 
 		private void HandleTestFireFX(in FireResult result)
 		{
+			return;
 			if (!result.isFired) return;
 
 			Ray ray = new Ray(result.origin, result.direction);

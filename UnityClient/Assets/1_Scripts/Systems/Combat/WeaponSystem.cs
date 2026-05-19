@@ -145,6 +145,8 @@ namespace FPS.Systems
 					tick = input.tick
 				};
 
+				Debug.Log("Dir : " + input.lookDir);
+
 				state.ammoInMagazine--;
 				state.lastFiredTick = input.tick;
 			}

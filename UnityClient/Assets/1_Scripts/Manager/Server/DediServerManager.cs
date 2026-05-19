@@ -1,9 +1,7 @@
 ﻿using FPS.Controller;
 using FPS.Manager.Game;
 using FPS.Utils;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using UnityEngine;
@@ -45,6 +43,7 @@ namespace FPS.Manager.Server
 		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
 
 		public int id = 1;
+		public int serverTick = 0;
 
 		public override void Init()
 		{
@@ -62,6 +61,7 @@ namespace FPS.Manager.Server
 
 			while (timer >= Constants.TICK_DT)
 			{
+				serverTick++;
 				BroadcastTransform();
 				timer -= Constants.TICK_DT;
 			}

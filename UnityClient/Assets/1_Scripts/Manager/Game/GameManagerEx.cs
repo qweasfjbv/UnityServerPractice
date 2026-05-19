@@ -2,7 +2,6 @@ using FPS.Controller;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace FPS.Manager.Game
 {
@@ -120,14 +119,15 @@ namespace FPS.Manager.Game
 				}
 			}
 
-			// Judge
-			bool result = Physics.Raycast(
+			RaycastHit[] hits = Physics.RaycastAll(
 				origin,
 				direction,
-				out hit,
 				distance,
-				LayerMask.GetMask("Player", "Default"),
-				QueryTriggerInteraction.Ignore);
+				LayerMask.GetMask("Player", "Wall"),
+				QueryTriggerInteraction.Collide
+				);
+
+			Debug.Log("origin, direction : " + origin + ", " + direction);
 
 			// Restore
 			foreach (var kv in backupPositions)
@@ -135,7 +135,28 @@ namespace FPS.Manager.Game
 				playerObjects[kv.Key].transform.position = kv.Value;
 			}
 
-			return result;
+
+			System.Array.Sort(hits, (a, b) =>
+			a.distance.CompareTo(b.distance));
+
+			foreach (var h in hits)
+			{
+				Debug.Log("HITS : " + h.collider.gameObject.name);
+				var target =
+					h.collider.GetComponentInParent<PlayerController>();
+
+				if (target == null)
+					continue;
+
+				if (target.gameObject == playerObjects[shooterLocalId])
+					continue;
+
+				hit = h;
+				return true;
+			}
+
+			hit = default;
+			return false;
 		}
 	}
 }

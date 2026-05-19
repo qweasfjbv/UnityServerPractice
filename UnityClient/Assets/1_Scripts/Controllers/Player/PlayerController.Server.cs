@@ -8,6 +8,8 @@ namespace FPS.Controller
 {
 	public partial class PlayerController
 	{
+		private int serverTickOffset = 0;
+
 		private void ServerPlayerUpdate()
 		{
 
@@ -16,6 +18,8 @@ namespace FPS.Controller
 		// TODO - Process Edge Case
 		public void OnGetInput(int localId, PlayerInput input)
 		{
+			input.tick = (ServerManagers.Dedi as DediServerManager).serverTick;
+
 			int inputTick = input.tick.ToIndex();
 			curPlayerState = Simulate(curPlayerState, input, Constants.TICK_DT);
 
@@ -38,11 +42,12 @@ namespace FPS.Controller
 				if (GameManagerEx.Instance.LagCompensationRaycast(
 					input.tick,
 					fireResult.origin,
-					fireResult.direction,
+					input.muzzleDir,
 					60f,
 					localId,
 					out RaycastHit hit))
 				{
+					Debug.Log("TARGETTED : " + hit.collider.gameObject.name);
 					var target = hit.collider.GetComponentInParent<PlayerController>();
 					if (target != null)
 					{
@@ -53,7 +58,7 @@ namespace FPS.Controller
 
 			ApplyState(curPlayerState);
 			ApplyServerView(input);
-
+			
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
 			ServerManagers.Dedi.Send(localId, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
 		}
@@ -82,10 +87,18 @@ namespace FPS.Controller
 
 		public bool TryGetHistoricalState(int tick, out PlayerState state)
 		{
-			int index = tick.ToIndex();
-			state = stateBuffer[index];
+			// HACK - 최근 20 tick 까지는 확인
+			for (int i = 0; i < 20; i++)
+			{
+				int index = tick.ToIndex();
+				state = stateBuffer[index];
 
-			return state.tick == tick;
+				if(state.tick == tick) return true;
+				tick--;
+			}
+
+			state = default;
+			return false;
 		}
 	}
 }

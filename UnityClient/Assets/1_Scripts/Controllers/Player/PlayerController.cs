@@ -17,6 +17,7 @@ namespace FPS.Controller
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct PlayerInput
 	{
+		public Vector3 muzzleDir;
 		public Vector2 move;
 		public Vector2 lookDir;
 		public int tick;
@@ -212,6 +213,7 @@ namespace FPS.Controller
 			input.isReload = Managers.Input.IA.Player.Reload.IsPressed();
 
 			input.lookDir = currentLookDir;
+			input.muzzleDir = Vector3.zero;
 
 			return input;
 		}
