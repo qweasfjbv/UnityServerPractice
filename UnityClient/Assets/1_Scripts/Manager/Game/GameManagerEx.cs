@@ -43,6 +43,7 @@ namespace FPS.Manager.Game
 			if (playerObjects.ContainsKey(id)) return;
 
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+			playerObject.name = $"Player {id}";
 			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
 			playerObjects.Add(id, playerObject);
 		}
@@ -127,8 +128,6 @@ namespace FPS.Manager.Game
 				QueryTriggerInteraction.Collide
 				);
 
-			Debug.Log("origin, direction : " + origin + ", " + direction);
-
 			// Restore
 			foreach (var kv in backupPositions)
 			{
@@ -141,7 +140,6 @@ namespace FPS.Manager.Game
 
 			foreach (var h in hits)
 			{
-				Debug.Log("HITS : " + h.collider.gameObject.name);
 				var target =
 					h.collider.GetComponentInParent<PlayerController>();
 

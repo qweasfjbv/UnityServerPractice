@@ -27,7 +27,7 @@ namespace FPS.Controller
 			inputBuffer[inputTick] = input;
 			stateBuffer[inputTick] = curPlayerState;
 
-			curWeaponState = WeaponSystem.SimulateWeapon(currentWeapon, curWeaponState, input,
+			curWeaponState = WeaponSystem.SimulateWeapon(this, currentWeapon, curWeaponState, input,
 				new CameraContext
 				{
 					camPosition = targetCamera.position,
@@ -47,11 +47,10 @@ namespace FPS.Controller
 					localId,
 					out RaycastHit hit))
 				{
-					Debug.Log("TARGETTED : " + hit.collider.gameObject.name);
 					var target = hit.collider.GetComponentInParent<PlayerController>();
 					if (target != null)
 					{
-						Debug.Log($"{localId} Hit: {target.name}");
+						Debug.Log($"Client {localId} Hit: {target.name}");
 					}
 				}
 			}

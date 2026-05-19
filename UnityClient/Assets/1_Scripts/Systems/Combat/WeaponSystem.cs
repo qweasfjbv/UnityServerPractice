@@ -3,6 +3,7 @@ using FPS.SO;
 using FPS.Utils;
 using FPS.Weapons;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace FPS.Systems
 {
@@ -93,6 +94,7 @@ namespace FPS.Systems
 		}
 
 		public static WeaponState SimulateWeapon(
+			PlayerController controller,
 			GunBase currentWeapon,
 			WeaponState state,
 			PlayerInput input,
@@ -141,7 +143,7 @@ namespace FPS.Systems
 				{
 					isFired = true,
 					origin = currentWeapon.MuzzlePos,
-					direction = CalculateWeaponDir(currentWeapon.MuzzlePos, cameraCtx),
+					direction = CalculateWeaponDir(controller, currentWeapon.MuzzlePos, cameraCtx),
 					tick = input.tick
 				};
 
@@ -181,20 +183,32 @@ namespace FPS.Systems
 			return state;
 		}
 
-		public static Vector3 CalculateWeaponDir(Vector3 position, CameraContext cameraCtx)
+		public static Vector3 CalculateWeaponDir(PlayerController controller, 
+			Vector3 position,
+			CameraContext cameraCtx)
 		{
 			Ray camRay = new Ray(cameraCtx.camPosition, cameraCtx.camForward);
-			Vector3 targetPoint;
 
-			if (Physics.Raycast(camRay, out RaycastHit hit, cameraCtx.range))
+			RaycastHit[] hits = Physics.RaycastAll(
+				camRay,
+				cameraCtx.range,
+				LayerMask.GetMask("Player", "Wall"),
+				QueryTriggerInteraction.Collide);
+
+			System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+			foreach (var hit in hits)
 			{
-				targetPoint = hit.point;
-			}
-			else
-			{
-				targetPoint = camRay.GetPoint(cameraCtx.range);
+				PlayerController hitPlayer =
+					hit.collider.GetComponentInParent<PlayerController>();
+
+				if (hitPlayer == controller)
+					continue;
+
+				return (hit.point - position).normalized;
 			}
 
+			Vector3 targetPoint = camRay.GetPoint(cameraCtx.range);
 			return (targetPoint - position).normalized;
 		}
 	}

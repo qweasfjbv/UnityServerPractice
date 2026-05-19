@@ -34,7 +34,7 @@ namespace FPS.Controller
 			inputBuffer[index] = input;
 			stateBuffer[index] = curPlayerState;
 
-			curWeaponState = WeaponSystem.SimulateWeapon(currentWeapon, curWeaponState, input, 
+			curWeaponState = WeaponSystem.SimulateWeapon(this, currentWeapon, curWeaponState, input, 
 				new CameraContext
 				{
 					camPosition = targetCamera.position,
