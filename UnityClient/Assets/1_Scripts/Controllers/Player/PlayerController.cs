@@ -17,8 +17,8 @@ namespace FPS.Controller
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct PlayerInput
 	{
-		public Vector3 muzzleDir;
-		public Vector3 muzzlePos;
+		public Vector3 muzzleDir;			  
+		public Vector3 muzzlePos;			  
 		public Vector2 move;
 		public Vector2 lookDir;
 		public int tick;
@@ -94,7 +94,7 @@ namespace FPS.Controller
 		[Header("----------Bindings----------")]
 		[SerializeField] private Transform cameraBoom;
 		[SerializeField] private Transform targetCamera;
-
+		[SerializeField] private GameObject followerPrefab;
 
 		[Header("----------Collision Layers----------")]
 		[SerializeField] private LayerMask collisionMask;
@@ -123,6 +123,7 @@ namespace FPS.Controller
 		[SerializeField, ReadOnly] private GunBase currentWeapon = null;
 		[SerializeField] private GameObject testPrefab;
 		[SerializeField] private TextMeshProUGUI ammoTMP;
+		[SerializeField] private float lag;
 
 		private bool isReady = false;
 		private PlayerControllerType controllerType = PlayerControllerType.None;
@@ -138,6 +139,8 @@ namespace FPS.Controller
 		private Vector2 currentLookDir = Vector2.zero;
 
 		private float timer = 0f;
+
+		private GameObject followerObject = null;
 
 		public void SetAsOtherPlayer()
 		{
