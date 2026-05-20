@@ -1,6 +1,7 @@
 using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
+using FPS.UI;
 using FPS.Utils;
 using System.Collections;
 using UnityEngine;
@@ -78,6 +79,8 @@ namespace FPS.Controller
 			float finalPitch = currentLookDir.y - weaponState.recoilState.recoilOffset.y;
 			transform.rotation = Quaternion.Euler(0f, currentLookDir.x + weaponState.recoilState.recoilOffset.x, 0f);
 			cameraBoom.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
+
+			UIManager.Instance.UpdateAmmoText(curWeaponState.ammoInMagazine, curWeaponState.reserveAmmo);
 		}
 
 		public void OnGetSnapshot(PlayerState state)
@@ -87,7 +90,7 @@ namespace FPS.Controller
 
 			int tick = state.tick + 1;
 
-			while (tick <= currentTick + 1)
+			while (tick <= currentTick)
 			{
 				simulateState = Simulate(simulateState, inputBuffer[tick.ToIndex()], Constants.TICK_DT);
 				weaponState = WeaponSystem.SimulateWeaponSimple(currentWeapon, weaponState, inputBuffer[tick.ToIndex()]);
@@ -116,8 +119,11 @@ namespace FPS.Controller
 		{
 			Vector3 localPos = curPlayerState.position;
 			Vector3 serverPos = rewind.position;
-
 			float error = Vector3.Distance(localPos, serverPos);
+
+			curPlayerState.position = rewind.position;
+			curPlayerState.velocity = rewind.velocity;
+			return;
 
 			// Large Error -> TP
 			if (error > TELEPORT)

@@ -52,7 +52,7 @@ namespace FPS.Controller
 						hitResult.shooterId = localId;
 						hitResult.targetId = GameManagerEx.Instance.GetLocalId(target.transform);
 						hitResult.hitPoint = hit.point;
-						ServerManagers.Dedi.Send(localId, Serializer.Serialize(PacketType.S2C_HitResult, hitResult));
+						ServerManagers.Dedi.Send(localId, Serializer.Serialize<FireHitResult>(PacketType.S2C_HitResult, hitResult));
 					}
 				}
 			}

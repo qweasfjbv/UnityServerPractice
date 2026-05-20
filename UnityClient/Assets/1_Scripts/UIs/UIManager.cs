@@ -39,6 +39,7 @@ namespace FPS.UI
 
 			TextMeshProUGUI text = go.GetComponent<TextMeshProUGUI>();
 			text.text = "HIT!";
+			Debug.Log("PlayHitUI");
 
 			StartCoroutine(HitTextCoroutine(rect, text));
 		}

@@ -6,7 +6,6 @@ using FPS.Utils;
 using FPS.Weapons;
 using System.Runtime.InteropServices;
 using TMPro;
-using TMPro.EditorUtilities;
 using Unity.Collections;
 using UnityEngine;
 
@@ -166,6 +165,7 @@ namespace FPS.Controller
 
 		private void Awake()
 		{
+			Physics.autoSyncTransforms = true;
 			animator = GetComponent<Animator>();
 
 			Cursor.visible = false;
@@ -260,10 +260,8 @@ namespace FPS.Controller
 		{
 			state.isGrounded = CheckGround(state, out _);
 
-			Vector2 lookDir = new Vector2(Mathf.Atan2(targetCamera.forward.x, targetCamera.forward.z) * Mathf.Rad2Deg, -Mathf.Asin(targetCamera.forward.y) * Mathf.Rad2Deg);
-
 			// Accel/Friction
-			Vector3 wishDir = Quaternion.Euler(0f, lookDir.x, 0f) * new Vector3(input.move.x, 0, input.move.y);
+			Vector3 wishDir = transform.rotation * new Vector3(input.move.x, 0, input.move.y);
 			float accel = state.isGrounded ? walkAccel : airAccel;
 			float friction = state.isGrounded ? groundFriction : airFriction;
 
@@ -349,8 +347,7 @@ namespace FPS.Controller
 
 		private bool CheckGround(PlayerState state, out float groundY)
 		{
-			Vector3 origin = transform.position + Vector3.up * 0.1f;
-
+			Vector3 origin = state.position + Vector3.up * 0.1f;
 			if (Physics.Raycast(
 				origin,
 				Vector3.down,
@@ -361,7 +358,6 @@ namespace FPS.Controller
 				groundY = hit.point.y;
 				return true;
 			}
-
 			groundY = 0f;
 			return false;
 		}
