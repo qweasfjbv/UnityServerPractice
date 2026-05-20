@@ -2,6 +2,8 @@ using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
 using FPS.Utils;
+using System.Collections;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -54,6 +56,14 @@ namespace FPS.Controller
 			ApplyClientView(input, curWeaponState);
 			ApplyAnimParams(input, curPlayerState, curWeaponState);
 
+			StartCoroutine(SendInputAfterLag(lag, input));
+			// ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
+		}
+
+
+		private IEnumerator SendInputAfterLag(float lag, PlayerInput input)
+		{
+			yield return new WaitForSeconds(lag);
 			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
 		}
 
@@ -84,6 +94,17 @@ namespace FPS.Controller
 				weaponState = WeaponSystem.SimulateWeaponSimple(currentWeapon, weaponState, inputBuffer[tick.ToIndex()]);
 				tick++;
 			}
+
+			if (followerObject == null)
+			{
+				followerObject = Instantiate(followerPrefab);
+				followerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
+			}
+
+			NetworkPlayerState networkState = default;
+			networkState.playerState = state;
+			networkState.lookDir = inputBuffer[state.tick.ToIndex()].lookDir;
+			followerObject.GetComponent<PlayerController>().UpdateState(networkState);
 
 			Reconcile(simulateState);
 			ReconcileWeapon(weaponState);
@@ -143,7 +164,7 @@ namespace FPS.Controller
 		private void HandleTestFireFX(in FireResult result)
 		{
 			if (!result.isFired) return;
-
+			currentWeapon.DoFireFX();
 			RaycastHit[] hits = Physics.RaycastAll(
 							result.origin,
 							result.direction,

@@ -177,7 +177,7 @@ namespace FPS.Manager.Server
 		public override void Send(int localId, byte[] payload)
 		{
 			IPEndPoint? endPoint = clients
-				.FirstOrDefault(kvp => kvp.Value.localId == id)
+				.FirstOrDefault(kvp => kvp.Value.localId == localId)
 				.Key;
 
 			if (endPoint == null) return;
