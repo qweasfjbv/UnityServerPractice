@@ -3,7 +3,6 @@ using FPS.Manager.Server;
 using FPS.Systems;
 using FPS.Utils;
 using System.Collections;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace FPS.Controller
@@ -169,7 +168,7 @@ namespace FPS.Controller
 							result.origin,
 							result.direction,
 							60f,
-							LayerMask.GetMask("Player", "Wall"),
+							LayerMask.GetMask("Player", "Wall", "Obstacles", "Floor"),
 							QueryTriggerInteraction.Collide
 							);
 

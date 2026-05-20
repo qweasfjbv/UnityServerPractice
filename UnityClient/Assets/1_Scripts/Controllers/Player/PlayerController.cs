@@ -1,10 +1,12 @@
 using FPS.Manager.Game;
 using FPS.Manager.Server;
 using FPS.Systems;
+using FPS.UI;
 using FPS.Utils;
 using FPS.Weapons;
 using System.Runtime.InteropServices;
 using TMPro;
+using TMPro.EditorUtilities;
 using Unity.Collections;
 using UnityEngine;
 
@@ -65,6 +67,14 @@ namespace FPS.Controller
 	{
 		public int localId;
 		public int startTick;
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct FireHitResult
+	{
+		public int shooterId;
+		public int targetId;
+		public Vector3 hitPoint;
 	}
 
 	public enum PlayerControllerType
@@ -168,6 +178,14 @@ namespace FPS.Controller
 			if (ServerManagers.Dedi is DediClientManager client)
 			{
 				controllerType = PlayerControllerType.Client;
+				(ServerManagers.Dedi as DediClientManager).OnGetFireHitResult += ((fireResult) =>
+				{
+					if (GameManagerEx.Instance.LocalId == fireResult.shooterId)
+					{
+						// HACK
+						UIManager.Instance.PlayHitUI(0);
+					}
+				});
 			}
 
 			// HACK
@@ -359,8 +377,8 @@ namespace FPS.Controller
 		{
 			PlayerAnimParams animParams;
 			animParams.input = input.move.sqrMagnitude;
-			animParams.speed.x = state.velocity.x / maxRunSpeed;
-			animParams.speed.y = state.velocity.z / maxRunSpeed;
+			animParams.speed.x = Mathf.Abs(state.velocity.x) / maxRunSpeed;
+			animParams.speed.y = Mathf.Abs(state.velocity.z) / maxRunSpeed;
 			animParams.pitch = -Mathf.Clamp(currentLookDir.y - weaponState.recoilState.recoilOffset.x, -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
 			animParams.isAim = true;
 
@@ -368,7 +386,7 @@ namespace FPS.Controller
 
 			animator.SetFloat("speedX", animParams.speed.x);
 			animator.SetFloat("speedY", animParams.speed.y);
-			animator.SetFloat("speed", animParams.speed.x * animParams.speed.y * maxRunSpeed * 1.4f);
+			animator.SetFloat("speed", Mathf.Abs(animParams.speed.x * animParams.speed.y * maxRunSpeed * 1.4f));
 
 			animator.SetFloat("pitch", animParams.pitch);
 

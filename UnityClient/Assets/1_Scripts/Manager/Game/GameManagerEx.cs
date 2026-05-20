@@ -1,4 +1,6 @@
 using FPS.Controller;
+using FPS.Manager.Server;
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -73,6 +75,17 @@ namespace FPS.Manager.Game
 			return playerObjects[id];
 		}
 
+		public int GetLocalId(Transform transform)
+		{
+			foreach (var kv in playerObjects)
+			{
+				if (kv.Value != null && kv.Value.transform == transform)
+					return kv.Key;
+			}
+
+			return -1;
+		}
+
 		public void OnGetPlayerInput(int localId, PlayerInput input)
 		{
 			if (!playerObjects.TryGetValue(localId, out GameObject playerObject)) return;
@@ -121,19 +134,15 @@ namespace FPS.Manager.Game
 				{
 					backupPositions[kv.Key] = kv.Value.transform.position;
 					kv.Value.transform.position = pastState.position;
-
-					Debug.Log("REWINEDED : " + pastState.position);
 				}
 			}
-
-			Debug.Log("Shoot Info : " + origin + ", " + direction);
 			Physics.SyncTransforms();
 
 			RaycastHit[] hits = Physics.RaycastAll(
 				origin,
 				direction,
 				distance,
-				LayerMask.GetMask("Player", "Wall"),
+				LayerMask.GetMask("Player", "Wall", "Obstacles", "Floor"),
 				QueryTriggerInteraction.Collide
 				);
 

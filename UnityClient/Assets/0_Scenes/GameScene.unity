@@ -937,6 +937,7 @@ GameObject:
   - component: {fileID: 2049038851}
   - component: {fileID: 2049038850}
   - component: {fileID: 2049038849}
+  - component: {fileID: 2049038853}
   m_Layer: 5
   m_Name: HUDCanvas
   m_TagString: Untagged
@@ -1028,6 +1029,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &2049038853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2049038848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5df9f5f45c300b41b97fbeb5086267e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aimUI: {fileID: 1825906346}
+  ammoText: {fileID: 2031322340}
+  hitTextPrefab: {fileID: 4247380384883499732, guid: 9d323a53567afdc4aa16bd9b0418bc2b, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

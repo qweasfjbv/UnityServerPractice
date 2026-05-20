@@ -22,8 +22,8 @@ namespace FPS.Controller
 			transform.rotation = Quaternion.Euler(0f, state.lookDir.x, 0f);
 
 			PlayerAnimParams animParams;
-			animParams.speed.x = state.playerState.velocity.x / maxRunSpeed;
-			animParams.speed.y = state.playerState.velocity.z / maxRunSpeed;
+			animParams.speed.x = Mathf.Abs(state.playerState.velocity.x) / maxRunSpeed;
+			animParams.speed.y = Mathf.Abs(state.playerState.velocity.z) / maxRunSpeed;
 			animParams.pitch = -Mathf.Clamp(state.lookDir.y , -viewPitchLimit, viewPitchLimit) / viewPitchLimit * .5f + .5f;
 			animParams.isAim = true;
 

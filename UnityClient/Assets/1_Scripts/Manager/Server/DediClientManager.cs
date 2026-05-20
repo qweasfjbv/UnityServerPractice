@@ -1,5 +1,6 @@
 ﻿using FPS.Controller;
 using FPS.Manager.Game;
+using FPS.Systems;
 using FPS.Utils;
 using System;
 using System.Net;
@@ -22,6 +23,7 @@ namespace FPS.Manager.Server
 		private IPEndPoint serverEP;
 
 		public Action<PlayerState> OnGetSnapshotAction { get; set; }
+		public Action<FireHitResult> OnGetFireHitResult { get; set; }
 
 		public override void Init()
 		{
@@ -69,6 +71,12 @@ namespace FPS.Manager.Server
 					{
 						NetworkPlayerState playerState = Serializer.Deserialize<NetworkPlayerState>(out _, packet.data);
 						GameManagerEx.Instance.UpdatePlayerState(playerState);
+					}
+					break;
+				case PacketType.S2C_HitResult:
+					{
+						FireHitResult hitResult = Serializer.Deserialize<FireHitResult>(out _, packet.data);
+						OnGetFireHitResult?.Invoke(hitResult);
 					}
 					break;
 				case PacketType.Spawn:
