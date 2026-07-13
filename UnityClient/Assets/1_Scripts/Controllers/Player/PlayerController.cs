@@ -180,7 +180,7 @@ namespace FPS.Controller
 				controllerType = PlayerControllerType.Client;
 				(ServerManagers.Dedi as DediClientManager).OnGetFireHitResult += ((fireResult) =>
 				{
-					if (GameManagerEx.Instance.LocalId == fireResult.shooterId)
+					if (GameManagerEx.Instance.MyLocalId == fireResult.shooterId)
 					{
 						// HACK
 						UIManager.Instance.PlayHitUI(0);

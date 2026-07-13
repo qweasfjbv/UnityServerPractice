@@ -52,7 +52,7 @@ namespace FPS.Controller
 						hitResult.shooterId = localId;
 						hitResult.targetId = GameManagerEx.Instance.GetLocalId(target.transform);
 						hitResult.hitPoint = hit.point;
-						ServerManagers.Dedi.Send(localId, Serializer.Serialize<FireHitResult>(PacketType.S2C_HitResult, hitResult));
+						ServerManagers.Dedi.Send(null, ChannelMode.Unreliable, PacketType.S2C_HitResult, hitResult);
 					}
 				}
 			}
@@ -61,7 +61,9 @@ namespace FPS.Controller
 			ApplyServerView(input);
 			
 			curPlayerState.weaponState = curWeaponState.ToNetworkState();
-			ServerManagers.Dedi.Send(localId, Serializer.Serialize<PlayerState>(PacketType.S2C_Snapshot, curPlayerState));
+#if !UNITY_EDITOR && UNITY_SERVER
+			(ServerManagers.Dedi as DediServerManager).Send(localId, ChannelMode.Reliable, PacketType.S2C_Snapshot, curPlayerState);
+#endif
 		}
 
 		private void ApplyServerView(in PlayerInput input)

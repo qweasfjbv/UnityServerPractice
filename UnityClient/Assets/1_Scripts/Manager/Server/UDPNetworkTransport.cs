@@ -15,7 +15,7 @@ namespace FPS.Manager.Server
 	/// </summary>
 	public abstract class UDPNetworkTransport
 	{
-		protected UdpClient udp;
+		protected Socket localSocket;
 		protected IPEndPoint localEP;
 		
 		protected bool isRunning;
@@ -26,7 +26,7 @@ namespace FPS.Manager.Server
 		public virtual void Init()
 		{
 			localEP = new IPEndPoint(IPAddress.Any, Constants.PORT_DEDI);
-			udp = new UdpClient(localEP);
+			localSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
 			recvThread = new Thread(ReceiveLoop);
 			recvThread.IsBackground = true;
@@ -45,34 +45,46 @@ namespace FPS.Manager.Server
 		{
 			isRunning = false;
 			recvThread?.Abort();
-			udp?.Close();
-		}
-		public virtual void Send(IPEndPoint destEP, byte[] payload)
-		{
-			udp.Send(payload, payload.Length, destEP);
+			localSocket?.Close();
 		}
 
-		public virtual void Send(int localId, byte[] payload) { }
+		public abstract void Send<T>(IPEndPoint destEP,
+			ChannelMode channel,
+			PacketType type,
+			in T payload) where T : unmanaged;
 
 		protected abstract void HandlePacket(in UdpPacket packet);
 
 		protected void ReceiveLoop()
 		{
-			try
+			byte[] buffer = new byte[2048];
+			EndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+			
+			while (isRunning)
 			{
-				while (true)
+				try
 				{
-					IPEndPoint sender = null;
-					UdpPacket packet;
-					packet.data = udp.Receive(ref sender);
-					packet.sender = sender;
+					int received = localSocket.ReceiveFrom(buffer, ref sender);
 
-					recvQueue.Enqueue(packet);
+					byte[] data = new byte[received];
+					Array.Copy(buffer, data, received);
+
+					recvQueue.Enqueue(new UdpPacket
+					{
+						data = data,
+						sender = (IPEndPoint)sender
+					});
 				}
-			}
-			catch (Exception e)
-			{
-				Debug.Log($"UDP Receive stopped : {e}");
+				catch (SocketException)
+				{
+					if (!isRunning) break;
+					// Temporal Err - continue
+				}
+				catch (Exception e)
+				{
+					Debug.Log($"UDP Receive stopped : {e}");
+					break;
+				}
 			}
 		}
 	}

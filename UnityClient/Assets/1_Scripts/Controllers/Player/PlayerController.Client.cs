@@ -64,7 +64,7 @@ namespace FPS.Controller
 		private IEnumerator SendInputAfterLag(float lag, PlayerInput input)
 		{
 			yield return new WaitForSeconds(lag);
-			ServerManagers.Dedi.Send(null, Serializer.Serialize(PacketType.C2S_Input, input));
+			ServerManagers.Dedi.Send(null, ChannelMode.Unreliable, PacketType.C2S_Input, input);
 		}
 
 		private void ApplyClientView(in PlayerInput input, in WeaponState weaponState)

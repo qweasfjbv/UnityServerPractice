@@ -1,6 +1,4 @@
 using FPS.Controller;
-using FPS.Manager.Server;
-using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,8 +21,8 @@ namespace FPS.Manager.Game
 		private int recentlyReceivedTick = 0;
 		public int RecentlyReceivedTick => recentlyReceivedTick;
 
-		private int localId = -1;
-		public int LocalId { get => localId; set => localId = value; }
+		private int myLocalId = -1;
+		public int MyLocalId { get => myLocalId; set => myLocalId = value; }
 
 		void Awake()
 		{
@@ -61,10 +59,10 @@ namespace FPS.Manager.Game
 
 		private IEnumerator WaitForInit(int id, int startTick)
 		{
-			yield return new WaitUntil(() => localId != -1);
+			yield return new WaitUntil(() => myLocalId != -1);
 
 			GameObject playerObject = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-			if (localId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
+			if (myLocalId != id) playerObject.GetComponent<PlayerController>().SetAsOtherPlayer();
 			else playerObject.GetComponent<PlayerController>().SetAsClientPlayer(startTick);
 			playerObjects.Add(id, playerObject);
 		}
@@ -95,7 +93,7 @@ namespace FPS.Manager.Game
 
 		public void UpdatePlayerState(PlayerState state)
 		{
-			if (!playerObjects.TryGetValue(localId, out GameObject playerObject)) return;
+			if (!playerObjects.TryGetValue(myLocalId, out GameObject playerObject)) return;
 
 			playerObject.GetComponent<PlayerController>().OnGetSnapshot(state);
 		}

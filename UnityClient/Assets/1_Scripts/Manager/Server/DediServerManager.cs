@@ -1,34 +1,13 @@
 ﻿using FPS.Controller;
 using FPS.Manager.Game;
 using FPS.Utils;
+using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Net;
 using UnityEngine;
 
 namespace FPS.Manager.Server
 {
-	public class ClientConnection
-	{
-		public IPEndPoint endPoint;
-
-		public int localId;
-
-		// Network
-		public long lastRecvTick;
-		public long lastRecvTime;
-
-		// Client Side Preidction
-		public int lastProcessedInputTick;
-		public PlayerInput lastInput;
-
-		// Game State
-		public PlayerState serverState;
-
-		// Security
-		public bool isConnected = true;
-	}
-
 	/// <summary>
 	/// 
 	/// Manager for Dedicated Server (Unity Headless Build)
@@ -40,9 +19,10 @@ namespace FPS.Manager.Server
 	/// </summary>
 	public class DediServerManager : UDPNetworkTransport
 	{
-		private ConcurrentDictionary<IPEndPoint, ClientConnection> clients = new();
+		private readonly ConcurrentDictionary<string, int> endpointToLocalID = new();   // IPEndPoint.ToString() -> localID
+		private readonly ConcurrentDictionary<int, PeerConnection> peers = new();       // localID -> PeerConnection
 
-		public int id = 1;
+		private int idProvider = 1;
 
 		private int serverTick = 0;
 		public int ServerTick => serverTick;
@@ -64,124 +44,163 @@ namespace FPS.Manager.Server
 			while (timer >= Constants.TICK_DT)
 			{
 				serverTick++;
-				BroadcastTransform();
+				BroadcastOtherSnapshot();
 				timer -= Constants.TICK_DT;
 			}
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			// TODO - Add all player when game starts
-			ClientConnection client;
-			if (!clients.TryGetValue(packet.sender, out client))
+			PeerConnection client = null;
+			if (!TryGetPeer(packet.sender, out var peer))
 			{
-				client = new ClientConnection
-				{
-					endPoint = packet.sender,
-					localId = id++,
-					isConnected = true,
-				};
-				clients.TryAdd(packet.sender, client);
+				Debug.LogWarning($"[DediServerManager] Unknown Peer: {packet.sender}");
 
-				Send(packet.sender, Serializer.Serialize<int>(PacketType.Init, client.localId));
+				client = new PeerConnection(localSocket, packet.sender, idProvider++);
+				peers.TryAdd(client.LocalID, client);
+				endpointToLocalID.TryAdd(client.RemoteEndPoint.ToString(), client.LocalID);
+
+				Send(client.LocalID, ChannelMode.Reliable, PacketType.Init, client.LocalID);
 			}
 
-			PacketType type = (PacketType)packet.data[0];
+			var header = peer.ProcessPacket(packet.data);
 
-			switch (type)
+			switch (header.type)
 			{
-				case PacketType.C2S_Ping:
-					{
-						// Response Ping-Pong
-						long clientTime = Serializer.Deserialize<long>(out _, packet.data);
-						Send(packet.sender, Serializer.Serialize<long>(PacketType.S2C_Pong, clientTime));
-
-						client.lastRecvTime = NetworkTimer.NowMs();
-						client.lastRecvTick = NetworkTimer.NowTicks();
-					}
+				case PacketType.Ack:
+					// NOTHING TO DO
 					break;
-				case PacketType.C2S_Input:
-					{
-						PlayerInput input = Serializer.Deserialize<PlayerInput>(out _, packet.data);
-						GameManagerEx.Instance.OnGetPlayerInput(client.localId, input);
-					}
+				case PacketType.Ping:
+					peer.Send(header.channel, PacketType.Pong, new EmptyPayload());
 					break;
 				case PacketType.Spawn:
 					{
 						SpawnData spawndata;
 						spawndata.startTick = serverTick;
-						spawndata.localId = client.localId;
+						spawndata.localId = peer.LocalID;
 
-						byte[] spawnPacket = Serializer.Serialize<SpawnData>(PacketType.Spawn, spawndata);
 						GameManagerEx.Instance.SpawnPlayerObjectOnServer(spawndata);
 
-						foreach (var kv in clients)
+						foreach (var kv in peers)
 						{
-							Send(kv.Key, spawnPacket);
+							kv.Value.Send(ChannelMode.Reliable, PacketType.Spawn, spawndata);
 						}
 
-						foreach (var kv in clients)
+						foreach (var kv in peers)
 						{
-							ClientConnection other = kv.Value;
+							var other = kv.Value;
 
-							if (other.localId == spawndata.localId)
+							if (other.LocalID == spawndata.localId)
 								continue;
 
-							byte[] existingPlayerSpawnPacket = Serializer.Serialize(
-								PacketType.Spawn,
-								other.localId
-							);
-
-							Send(client.endPoint, existingPlayerSpawnPacket);
+							spawndata.localId = other.LocalID;
+							Send(peer.RemoteEndPoint, ChannelMode.Reliable, PacketType.Spawn, spawndata);
 						}
+					}
+					break;
+				default:
+					HandleData(peer, header, packet.data.AsSpan().Slice(Serializer.HEADER_SIZE));
+					break;
+			}
+		}
+
+		private void HandleData(PeerConnection peer, in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
+		{
+			switch (header.type)
+			{
+				case PacketType.C2S_Input:
+					{
+						PlayerInput input = Serializer.ReadPayload<PlayerInput>(payloadSpan);
+						GameManagerEx.Instance.OnGetPlayerInput(peer.LocalID, input);
 					}
 					break;
 			}
 		}
 
-		private void BroadcastTransform()
+		private void BroadcastOtherSnapshot()
 		{
-			foreach (var senderPair in clients)
+			foreach (var kv1 in peers)
 			{
-				ClientConnection sender = senderPair.Value;
+				var sender = kv1.Value;
 
-				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.localId);
+				GameObject playerObject = GameManagerEx.Instance.GetPlayerObject(sender.LocalID);
 				if (playerObject == null) continue;
 
-				byte[] payload = Serializer.Serialize(
-					PacketType.S2C_StateUpdate,
-					playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.localId)
-				);
-
-				foreach (var receiverPair in clients)
+				foreach (var kv2 in peers)
 				{
-					ClientConnection receiver = receiverPair.Value;
+					var receiver = kv2.Value;
 
-					if (!receiver.isConnected)
+					if (receiver.LocalID == sender.LocalID)
 						continue;
 
-					if (receiver.localId == sender.localId)
-						continue;
-
-					Send(receiver.endPoint, payload);
+					Send(receiver.RemoteEndPoint, ChannelMode.Unreliable, PacketType.S2C_StateUpdate, 
+						playerObject.GetComponent<PlayerController>().GetNetworkPlayerState(sender.LocalID));
 				}
 			}
 		}
 
-		public override void Send(IPEndPoint destEP, byte[] payload)
+		private bool TryGetPeer(IPEndPoint sender, out PeerConnection peer)
 		{
-			if (destEP == null) return;
-			base.Send(destEP, payload);
+			string key = sender.ToString();
+
+			if (!endpointToLocalID.TryGetValue(key, out int localId))
+			{
+				peer = null;
+				return false;
+			}
+
+			if (!peers.TryGetValue(localId, out peer))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
-		public override void Send(int localId, byte[] payload)
+		private bool TryGetLocalId(IPEndPoint sender, out int localId)
 		{
-			IPEndPoint? endPoint = clients
-				.FirstOrDefault(kvp => kvp.Value.localId == localId)
-				.Key;
+			if (!TryGetPeer(sender, out PeerConnection peer))
+			{
+				localId = -1;
+				return false;
+			}
 
-			if (endPoint == null) return;
-			Send(endPoint, payload);
+			localId = peer.LocalID;
+			return true;
+		}
+
+
+		public void Send<T>(int localId, ChannelMode channel, PacketType type, in T payload)
+			where T: unmanaged
+		{
+			if (!peers.TryGetValue(localId, out PeerConnection peer))
+			{
+				Debug.LogWarning("[DediServerManager] - localID doesn't exist.");
+				return;
+			}
+
+			peer.Send<T>(channel, type, payload);
+		}
+
+		public override void Send<T>(IPEndPoint destEP,
+			ChannelMode channel,
+			PacketType type,
+			in T payload)
+		{
+			if (destEP == null)	// null -> broadcast
+			{
+				foreach (var kv in peers)
+					kv.Value.Send(channel, type, payload);
+
+				return;
+			}
+
+			if (!TryGetPeer(destEP, out PeerConnection peer))
+			{
+				return;
+			}
+
+			peer.Send<T>(channel, type, payload);
 		}
 	}
 }

@@ -45,6 +45,20 @@ namespace FPS.Utils
 	}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct EmptyPayload { };
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct PacketHeader
+	{
+		public PacketType type;			// 1 byte
+		public ChannelMode channel;		// 1 byte
+		public ushort sequence;			// 2 byte
+		public ushort ack;				// 2 byte
+		public uint ackBitfield;		// 4 byte
+		public byte flags;				// 1 byte						 
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct UdpPacket
 	{
 		public byte[] data;

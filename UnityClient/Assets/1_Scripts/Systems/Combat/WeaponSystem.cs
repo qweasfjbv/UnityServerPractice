@@ -1,12 +1,8 @@
-﻿using Cysharp.Threading.Tasks.Triggers;
-using FPS.Controller;
+﻿using FPS.Controller;
 using FPS.SO;
 using FPS.Utils;
 using FPS.Weapons;
 using UnityEngine;
-using UnityEngine.Rendering;
-using static UnityEngine.UI.GridLayoutGroup;
-using static UnityEngine.UI.Image;
 
 namespace FPS.Systems
 {

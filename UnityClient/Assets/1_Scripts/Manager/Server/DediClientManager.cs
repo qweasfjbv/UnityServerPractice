@@ -1,10 +1,10 @@
 ﻿using FPS.Controller;
 using FPS.Manager.Game;
-using FPS.Systems;
 using FPS.Utils;
 using System;
 using System.Net;
 using System.Threading;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FPS.Manager.Server
@@ -20,7 +20,7 @@ namespace FPS.Manager.Server
 	/// </summary>
 	public class DediClientManager : UDPNetworkTransport
 	{
-		private IPEndPoint serverEP;
+		private PeerConnection serverConnection;
 
 		public Action<PlayerState> OnGetSnapshotAction { get; set; }
 		public Action<FireHitResult> OnGetFireHitResult { get; set; }
@@ -30,19 +30,20 @@ namespace FPS.Manager.Server
 			base.Init();
 
 			// TODO - PORT will be changed by GameServerManager
-			serverEP = new IPEndPoint(IPAddress.Parse(Constants.IP_ADDR), Constants.PORT_DEDI);
-			
+			var serverEP = new IPEndPoint(IPAddress.Parse(Constants.IP_ADDR), Constants.PORT_DEDI);
+			serverConnection = new PeerConnection(localSocket, serverEP, -1);
+
 			// Send Ping per 1000ms
 			new Thread(() =>
 			{
 				while (true)
 				{
-					Send(serverEP, Serializer.Serialize<long>(PacketType.C2S_Ping, NetworkTimer.NowMs()));
-					Thread.Sleep(1000);
+					Send(null, ChannelMode.Unreliable, PacketType.Ping, new EmptyPayload());
+					Thread.Sleep(10);
 				}
 			}).Start();
-
-			Send(serverEP, Serializer.Serialize(PacketType.Spawn));
+			
+			Send(null, ChannelMode.Reliable, PacketType.Spawn, new EmptyPayload());
 			Debug.Log("DediClient Init");
 		}
 
@@ -53,50 +54,73 @@ namespace FPS.Manager.Server
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			PacketType type = (PacketType)packet.data[0];
-			switch (type)
+			var header = serverConnection.ProcessPacket(packet.data);
+			var payloadSpan = packet.data.AsSpan().Slice(Serializer.HEADER_SIZE);
+
+			switch (header.type)
 			{
-				case PacketType.S2C_Pong:
+				case PacketType.Pong:
 					{
-						// Debug.Log("Ping Latency : " + (NetworkTimer.NowMs() - Serializer.Deserialize<long>(out _, packet.data)));
-					}
-					break;
-				case PacketType.S2C_Snapshot:
-					{
-						PlayerState snapshot = Serializer.Deserialize<PlayerState>(out _, packet.data);
-						GameManagerEx.Instance.UpdatePlayerState(snapshot);
-					}
-					break;
-				case PacketType.S2C_StateUpdate:
-					{
-						NetworkPlayerState playerState = Serializer.Deserialize<NetworkPlayerState>(out _, packet.data);
-						GameManagerEx.Instance.UpdatePlayerState(playerState);
-					}
-					break;
-				case PacketType.S2C_HitResult:
-					{
-						FireHitResult hitResult = Serializer.Deserialize<FireHitResult>(out _, packet.data);
-						OnGetFireHitResult?.Invoke(hitResult);
+						Debug.Log("Pong Received");
 					}
 					break;
 				case PacketType.Spawn:
 					{
-						SpawnData data = Serializer.Deserialize<SpawnData>(out _, packet.data);
+						SpawnData data = Serializer.ReadPayload<SpawnData>(packet.data);
 						GameManagerEx.Instance.SpawnPlayerObject(data);
 					}
 					break;
 				case PacketType.Init:
 					{
-						GameManagerEx.Instance.LocalId = Serializer.Deserialize<int>(out _, packet.data);
+						GameManagerEx.Instance.MyLocalId = Serializer.ReadPayload<int>(payloadSpan);
+					}
+					break;
+				default:
+					HandleData(header, payloadSpan);
+					break;
+			}
+		}
+
+		private void HandleData(in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
+		{
+			switch (header.type)
+			{
+				case PacketType.S2C_Snapshot:
+					{
+						PlayerState snapshot = Serializer.ReadPayload<PlayerState>(payloadSpan);
+						GameManagerEx.Instance.UpdatePlayerState(snapshot);
+					}
+					break;
+				case PacketType.S2C_StateUpdate:
+					{
+						NetworkPlayerState playerState = Serializer.ReadPayload<NetworkPlayerState>(payloadSpan);
+						GameManagerEx.Instance.UpdatePlayerState(playerState);
+					}
+					break;
+				case PacketType.S2C_HitResult:
+					{
+						FireHitResult hitResult = Serializer.ReadPayload<FireHitResult>(payloadSpan);
+						OnGetFireHitResult?.Invoke(hitResult);
 					}
 					break;
 			}
 		}
 
-		public override void Send(IPEndPoint destEP, byte[] payload)
+		public override void Send<T>(IPEndPoint destEP, ChannelMode channel, PacketType type, in T payload)
 		{
-			if (destEP == null) destEP = serverEP;
-			base.Send(destEP, payload);
+			if (serverConnection == null)
+			{
+				Debug.LogWarning("Server Endpoint doesn't exist.");
+				return;
+			}
+
+			if (destEP != null || destEP != serverConnection.RemoteEndPoint)
+			{
+				Debug.LogWarning("[DediClinetManager] - wrong destination.");
+				return;
+			}
+
+			serverConnection.Send(channel, type, payload);
 		}
 	}
 }
