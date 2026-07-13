@@ -50,37 +50,37 @@ namespace FPS.Manager.Server
 		public override void OnUpdate()
 		{
 			base.OnUpdate();
+			serverConnection.OnUpdate(TimeSpan.FromMilliseconds(100));
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
 		{
-			var header = serverConnection.ProcessPacket(packet.data);
+			var header = serverConnection.ProcessPacket(packet.data, out var readyPackets);
 			var payloadSpan = packet.data.AsSpan().Slice(Serializer.HEADER_SIZE);
 
+			foreach (var (packetHeader, payload) in readyPackets)
+			{
+				Dispatch(packetHeader, payload);
+			}
+		}
+
+		private void Dispatch(in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
+		{
 			switch (header.type)
 			{
-				case PacketType.Pong:
-					{
-						Debug.Log("Pong Received");
-					}
-					break;
+				case PacketType.Pong:	Debug.Log("Pong Received"); break;
 				case PacketType.Spawn:
-					{
-						SpawnData data = Serializer.ReadPayload<SpawnData>(packet.data);
-						GameManagerEx.Instance.SpawnPlayerObject(data);
-					}
+					SpawnData data = Serializer.ReadPayload<SpawnData>(payloadSpan);
+					GameManagerEx.Instance.SpawnPlayerObject(data);
 					break;
 				case PacketType.Init:
-					{
-						GameManagerEx.Instance.MyLocalId = Serializer.ReadPayload<int>(payloadSpan);
-					}
+					GameManagerEx.Instance.MyLocalId = Serializer.ReadPayload<int>(payloadSpan);
 					break;
 				default:
 					HandleData(header, payloadSpan);
 					break;
 			}
 		}
-
 		private void HandleData(in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
 		{
 			switch (header.type)
@@ -114,7 +114,7 @@ namespace FPS.Manager.Server
 				return;
 			}
 
-			if (destEP != null || destEP != serverConnection.RemoteEndPoint)
+			if (destEP != null && destEP != serverConnection.RemoteEndPoint)
 			{
 				Debug.LogWarning("[DediClinetManager] - wrong destination.");
 				return;

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using UnityEngine.SocialPlatforms;
+using UnityEngine.Rendering;
 
 namespace FPS.Manager.Server
 {
@@ -33,6 +33,10 @@ namespace FPS.Manager.Server
 		private uint ackBitField = 0;
 		public uint AckBitfield => ackBitField;
 
+		private readonly Dictionary<ushort, (PacketHeader header, byte[] payload)> reorderBuffer = new();
+		private ushort expectedSequence;
+		private bool hasExpected;
+
 		public ChannelState(ChannelMode mode)
 		{
 			switch (mode)
@@ -53,10 +57,52 @@ namespace FPS.Manager.Server
 
 			localSequence = 0;
 			ackBitField = 0;
+			expectedSequence = 0;
+
 			hasReceivedAny = false;
+			hasExpected = false;
 		}
 
-		public void OnPacketReceived(ushort seq)
+		// 채널에 따라 패킷 처리 및 처리해야하는 패킷 반환
+		public List<(PacketHeader header, byte[] payload)> OnPacketReceived(PacketHeader header, ReadOnlySpan<byte> payload)
+		{
+			bool isDuplicate = IsDuplicate(header.sequence);
+			UpdateReceiveState(header.sequence);
+
+			var result = new List<(PacketHeader, byte[])>();
+
+			if (!IsReliable)
+			{
+				result.Add((header, payload.ToArray()));
+				return result;
+			}
+
+			if (isDuplicate)
+				return result;
+
+			if (!IsOrdered)
+			{
+				result.Add((header, payload.ToArray()));
+				return result;
+			}
+
+			if (!hasExpected)
+			{
+				expectedSequence = header.sequence;
+				hasExpected = true;
+			}
+
+			reorderBuffer[header.sequence] = (header, payload.ToArray());
+			while (reorderBuffer.TryGetValue(expectedSequence, out var entry))
+			{
+				result.Add(entry);
+				reorderBuffer.Remove(expectedSequence);
+				expectedSequence++;
+			}
+			return result;
+		}
+
+		private void UpdateReceiveState(ushort seq)
 		{
 			if (!hasReceivedAny)
 			{
@@ -71,9 +117,9 @@ namespace FPS.Manager.Server
 				// 새 시퀀스가 최신 -> 비트필드를 밀고, 이전 LastReceived 위치를 1로 표시
 				int shift = (ushort)(seq - LastReceivedSequence);
 
-				if (shift >= 32) 
+				if (shift >= 32)
 					ackBitField = 0;
-				else 
+				else
 					ackBitField = (ackBitField << shift) | (1u << (shift - 1));
 
 				LastReceivedSequence = seq;
@@ -102,6 +148,31 @@ namespace FPS.Manager.Server
 			};
 		}
 
+		public void ScanAndResend(Socket socket, IPEndPoint remoteEP, TimeSpan interval, int maxRetry)
+		{
+			var now = DateTime.UtcNow;
+			List<ushort> toDrop = null;
+
+			foreach (var kv in pendingAcks)
+			{
+				var entry = kv.Value;
+				if (now - entry.sentAt < interval) continue;
+
+				if (entry.retryCount >= maxRetry)
+				{
+					(toDrop ??= new List<ushort>()).Add(kv.Key); // 포기 (연결 끊김 처리는 상위에서)
+					continue;
+				}
+
+				socket.SendTo(entry.data, 0, entry.length, SocketFlags.None, remoteEP);
+				entry.sentAt = now;
+				entry.retryCount++;
+			}
+
+			if (toDrop != null)
+				foreach (var seq in toDrop) pendingAcks.Remove(seq);
+		}
+
 		public void OnAckReceived(ushort ackedSequence, uint ackBitfield)
 		{
 			pendingAcks.Remove(ackedSequence);
@@ -113,6 +184,17 @@ namespace FPS.Manager.Server
 			}
 		}
 
+		private bool IsDuplicate(ushort seq)
+		{
+			if (!hasReceivedAny) return false;
+			if (seq == LastReceivedSequence) return true;			// 정확히 재전송된 최신 패킷
+			if (IsNewer(seq, LastReceivedSequence)) return false;   // 새 것 -> 중복 X
+
+			int diff = (ushort)(LastReceivedSequence - seq);
+			if (diff >= 1 && diff <= 32)
+				return (AckBitfield & (1u << (diff - 1))) != 0;		// 비트가 이미 있으면 중복
+			return false;
+		}
 		public static bool IsNewer(ushort a, ushort b) => (ushort)(a - b) < (ushort.MaxValue / 2  + 1);
 	}
 
@@ -136,6 +218,16 @@ namespace FPS.Manager.Server
 			for (int i = 0; i < enumCounts; i++)
 			{
 				channels[i] = new ChannelState((ChannelMode)i);
+			}
+		}
+		
+		// 주기적으로 호출 필요
+		public void OnUpdate(TimeSpan resendInterval, int maxRetry = 10)
+		{
+			foreach (var channelState in channels)
+			{
+				if (!channelState.IsReliable) continue;
+				channelState.ScanAndResend(socket, remoteEndPoint, resendInterval, maxRetry);
 			}
 		}
 
@@ -172,15 +264,17 @@ namespace FPS.Manager.Server
 		}
 
 		// Process Received packet's header
-		public PacketHeader ProcessPacket(ReadOnlySpan<byte> data)
+		public PacketHeader ProcessPacket(ReadOnlySpan<byte> data, out List<(PacketHeader header, byte[] payload)> readyPackets)
 		{
 			var header = Serializer.ReadHeader(data);
 			var channelState = channels[(byte)header.channel];
+			var payload = data.Slice(Serializer.HEADER_SIZE);
 
-			channelState.OnPacketReceived(header.sequence);
+			readyPackets = channelState.OnPacketReceived(header, payload);
 			channelState.OnAckReceived(header.ack, header.ackBitfield);
 
 			return header;
 		}
+
 	}
 }

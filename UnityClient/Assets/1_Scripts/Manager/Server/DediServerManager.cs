@@ -4,6 +4,7 @@ using FPS.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using TMPro.EditorUtilities;
 using UnityEngine;
 
 namespace FPS.Manager.Server
@@ -47,6 +48,11 @@ namespace FPS.Manager.Server
 				BroadcastOtherSnapshot();
 				timer -= Constants.TICK_DT;
 			}
+
+			foreach (var peer in peers.Values)
+			{
+				peer.OnUpdate(TimeSpan.FromMilliseconds(100));
+			}
 		}
 
 		protected override void HandlePacket(in UdpPacket packet)
@@ -63,8 +69,16 @@ namespace FPS.Manager.Server
 				Send(client.LocalID, ChannelMode.Reliable, PacketType.Init, client.LocalID);
 			}
 
-			var header = peer.ProcessPacket(packet.data);
+			var header = peer.ProcessPacket(packet.data, out var readyPackets);
+			var payloadSpan = packet.data.AsSpan().Slice(Serializer.HEADER_SIZE);
 
+			foreach (var (packetHeader, payload) in readyPackets)
+			{
+				Dispatch(peer, packetHeader, payload);
+			}
+		}
+		private void Dispatch(PeerConnection peer, in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
+		{
 			switch (header.type)
 			{
 				case PacketType.Ack:
@@ -99,11 +113,10 @@ namespace FPS.Manager.Server
 					}
 					break;
 				default:
-					HandleData(peer, header, packet.data.AsSpan().Slice(Serializer.HEADER_SIZE));
+					HandleData(peer, header, payloadSpan);
 					break;
 			}
 		}
-
 		private void HandleData(PeerConnection peer, in PacketHeader header, ReadOnlySpan<byte> payloadSpan)
 		{
 			switch (header.type)
